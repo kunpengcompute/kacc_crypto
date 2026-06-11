@@ -898,3 +898,157 @@ sub ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe {
     b.ne    .L${label}_ret0
 ___
     my $round_check_new = <<___;
+    ldr     w7, [x4, #240]
+    cmp     w7, #$rounds
+    b.ne    .L${label}_ret0
+___
+    $ret =~ s/\Q$round_check_old\E/$round_check_new/
+        or die "failed to patch ctrtpl dec rounds $rounds";
+
+    if ($rounds != 10) {
+        my $save_key_old = <<___;
+    mov     x7, #160
+    ld1rqb  {z18.b}, p0/z, [x4, x7]
+___
+        my $save_key_new = <<___;
+    mov     x7, #160
+    ld1rqb  {z18.b}, p0/z, [x4, x7]
+    mov     x9, x4
+___
+        $ret =~ s/\Q$save_key_old\E/$save_key_new/
+            or die "failed to save key pointer for dec rounds $rounds";
+    }
+
+    if ($rounds != 10) {
+        my $window_old = <<___;
+    mov     x16, #8192
+
+.L${label}_window:
+___
+        my $window_new = <<___;
+    mov     x16, #8192
+    mov     x7, #@{[($rounds - 1) * 16]}
+    ld1rqb  {z5.b}, p0/z, [x9, x7]
+    mov     x7, #@{[$rounds * 16]}
+    ld1rqb  {z6.b}, p0/z, [x9, x7]
+___
+        if ($rounds == 14) {
+            $window_new .= <<___;
+    mov     x7, #176
+    ld1rqb  {z19.b}, p0/z, [x9, x7]
+    mov     x7, #192
+    ld1rqb  {z20.b}, p0/z, [x9, x7]
+___
+        }
+        $window_new .= <<___;
+
+.L${label}_window:
+___
+        $ret =~ s/\Q$window_old\E/$window_new/
+            or die "failed to preload aes dec keys";
+    }
+
+    my $old = emit_ctrghh512pt2e3_ctrtpl_tmpnorm_two_batches($label, 1,
+                                                             undef, 10);
+    my $new = emit_ctrghh512pt2e3_ctrtpl_tmpnorm_dec_two_batches($label, 1,
+                                                                 undef,
+                                                                 $rounds);
+    $ret =~ s/\Q$old\E/$new/
+        or die "failed to patch ctrtpl dec loop $rounds";
+
+    if ($rounds != 10) {
+        my $old_reduce = reduce_acc_stage_eor3_custom(3, "z28", "z29", "z30",
+                                                      "z23", "z4", "z5",
+                                                      "z6", "z7");
+        my $new_reduce = load_idx(".Lidx_lh", "z21");
+        $new_reduce .= load_idx(".Lidx_xh", "z22");
+        $new_reduce .= reduce_acc_stage_eor3_custom(3, "z28", "z29", "z30",
+                                                    "z23", "z4", "z21",
+                                                    "z22", "z7");
+        $ret =~ s/\Q$old_reduce\E/$new_reduce/
+            or die "failed to reload reduce indexes for dec rounds $rounds";
+    }
+
+    return $ret;
+}
+sub load_ctr4_from_buf {
+    my ($buf, $r0, $r1, $r2, $r3) = @_;
+    return <<___;
+    ld1b    {$r0.b}, p0/z, [$buf]
+    ld1b    {$r1.b}, p0/z, [$buf, #1, mul vl]
+    ld1b    {$r2.b}, p0/z, [$buf, #2, mul vl]
+    ld1b    {$r3.b}, p0/z, [$buf, #3, mul vl]
+___
+}
+
+sub preload_xor4_from_input {
+    return <<___;
+    ld1b    {z24.b}, p0/z, [x10]
+    ld1b    {z25.b}, p0/z, [x10, #1, mul vl]
+    ld1b    {z26.b}, p0/z, [x10, #2, mul vl]
+    ld1b    {z27.b}, p0/z, [x10, #3, mul vl]
+___
+}
+
+sub init_ctr8_template {
+    my ($buf) = @_;
+    my $ret = "";
+
+    for (my $i = 0; $i < 8; $i++) {
+        my $off = $i * 16;
+        $ret .= <<___;
+    str     x14, [$buf, #$off]
+    str     w15, [$buf, #@{[$off + 8]}]
+___
+    }
+
+    return $ret;
+}
+
+sub gen_ctr8_patch {
+    my ($buf, $ctr) = @_;
+    my $ret = "";
+
+    for (my $i = 0; $i < 8; $i++) {
+        my $off = $i * 16 + 12;
+        $ret .= <<___;
+    add     w7, $ctr, #$i
+    rev     w7, w7
+    str     w7, [$buf, #$off]
+___
+    }
+
+    return $ret;
+}
+
+my $code = <<___;
+#include "arm_arch.h"
+
+#if defined(__aarch64__) && __ARM_MAX_ARCH__>=8
+.arch   armv8-a+crypto+sve2-aes
+.text
+___
+
+$code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_probe();
+$code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_rounds_probe(12);
+$code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_rounds_probe(14);
+$code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe(10);
+$code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe(12);
+$code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe(14);
+$code .= <<___;
+
+.rodata
+.asciz  "AES-GCM SVE2 product kernels for ARMv8"
+.align  2
+.Lidx_swap:
+    .quad   1, 0, 3, 2
+.Lidx_lh:
+    .quad   1, 4, 3, 6
+.Lidx_xh:
+    .quad   1, 5, 3, 7
+.Lidx_xm:
+    .quad   0, 4, 2, 6
+#endif
+___
+
+print $code;
