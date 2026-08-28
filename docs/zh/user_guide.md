@@ -84,7 +84,7 @@ RSA优化当前通过独立benchmark验证，不是OpenSSL对外RSA API的透明
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| RSA_BENCH_BITS| RSA key size，支持`2048`和`4096` | `2048` |
+| RSA_BENCH_BITS | RSA key size，支持`2048`和`4096` | `2048` |
 | RSA_BENCH_ITERS | benchmark迭代次数 | `1000` |
 | RSA_BENCH_CORE | 绑定CPU core；设置后通过`taskset`执行 | 未绑定 |
 | RSA_BENCH_MODE | `all`、`native_default`、`native_no_blind`、`rsaz29_math`、`rsaz29_blind` | `all` |
@@ -132,6 +132,6 @@ RSA优化当前通过独立benchmark验证，不是OpenSSL对外RSA API的透明
 
 ## 修订记录
 
-| 发布日期 | 修订记录 |
-| ---- | ---- |
-| 2026-09-30 | 第一次正式发布。|
+| 文档版本 | 发布日期 | 修改说明 |
+| ---- | ---- | -- |
+| 01 | 2026-09-30 | 第一次正式发布。 |

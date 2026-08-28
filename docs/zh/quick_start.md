@@ -117,6 +117,6 @@ RSA_BENCH_LINK=shared OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.
 
 ## 修订记录
 
-| 发布日期 | 修订记录 |
-| ---- | ---- |
-| 2026-09-30 | 第一次正式发布。|
+| 文档版本 | 发布日期 | 修改说明 |
+| -- | ---- | ---- |
+| 01 | 2026-09-30 | 第一次正式发布。 |
