@@ -1,15 +1,15 @@
 /*
- * RSA2048 private CRT x8 benchmark using the radix29 SVE2 kernels.
+ * RSA private CRT x8 benchmark using the radix28 SVE2 kernels.
  *
  * Scope:
  *   - one RSA key, eight independent ciphertexts
  *   - RSA_NO_PADDING mathematical private operation
- *   - p and q CRT branches are executed through radix29 x8 fixed-window
+ *   - p and q CRT branches are executed through radix28 x8 fixed-window
  *     Montgomery exponentiation
  *   - CRT recombine is still native BN
  *
  * This benchmark is kept as the product validation/performance harness for the
- * retained radix29 x8 path.  It deliberately does not install experimental
+ * retained radix28 x8 path.  It deliberately does not install experimental
  * intermediate probes such as radix32, radix52, ADCLB/T, or native64 x4
  * reduction scaffolds.
  */
@@ -28,20 +28,27 @@
 #include "crypto/bn.h"
 
 #define LANES 8
-#define RSA_BITS 2048
-#define CRT_BITS 1024
+#ifndef RSA_BITS
+# define RSA_BITS 2048
+#endif
+#define CRT_BITS (RSA_BITS / 2)
 #define RSA_BYTES (RSA_BITS / 8)
 #define CRT_BYTES (CRT_BITS / 8)
-#define LIMBS64 16
-#define LIMBS64_RED 17
-#define LIMBS29 36
+#define RADIX_BITS 28
+#define LIMBS64 (CRT_BITS / 64)
+#define LIMBS64_RED (LIMBS64 + 1)
+#define LIMBS29 ((CRT_BITS + RADIX_BITS - 1) / RADIX_BITS)
 #define TABLE_ENTRIES 32
 #define WINDOW_BITS 5
-#define WINDOWS 205
-#define MASK29 UINT64_C(0x1fffffff)
+#define WINDOWS ((CRT_BITS + WINDOW_BITS - 1) / WINDOW_BITS)
+#define MASK29 UINT64_C(0x0fffffff)
 #define DEFAULT_ITERS 100
 #define WARMUP_ITERS 5
 
+#if CRT_BITS == 1024
+# define AMM_SVE2_X8_FUNC amm29_fused_lazy_sve2_x8_handasm
+# define AMM_SVE2_X8_SQR_FUNC amm29_fused_sqr_lazy_sve2_x8_handasm
+# define CT_GATHER_SVE_FUNC ct_gather_red29_soa_sve_handasm
 extern void amm29_fused_lazy_sve2_x8_handasm(uint32_t *out,
                                              const uint32_t *a,
                                              const uint32_t *b,
@@ -61,6 +68,32 @@ extern void ct_gather_red29_soa_sve_handasm(uint32_t *out,
                                             const uint32_t *table,
                                             uint32_t idx)
     __attribute__((weak));
+#elif CRT_BITS == 2048
+# define AMM_SVE2_X8_FUNC amm28_2048_fused_lazy_sve2_x8_handasm
+# define AMM_SVE2_X8_SQR_FUNC amm28_2048_fused_sqr_lazy_sve2_x8_handasm
+# define CT_GATHER_SVE_FUNC ct_gather_red28_2048_soa_sve_handasm
+extern void amm28_2048_fused_lazy_sve2_x8_handasm(uint32_t *out,
+                                                  const uint32_t *a,
+                                                  const uint32_t *b,
+                                                  const uint32_t *m,
+                                                  const uint64_t *n0_b,
+                                                  const uint64_t *n0_t)
+    __attribute__((weak));
+
+extern void amm28_2048_fused_sqr_lazy_sve2_x8_handasm(uint32_t *out,
+                                                      const uint32_t *a,
+                                                      const uint32_t *m,
+                                                      const uint64_t *n0_b,
+                                                      const uint64_t *n0_t)
+    __attribute__((weak));
+
+extern void ct_gather_red28_2048_soa_sve_handasm(uint32_t *out,
+                                                 const uint32_t *table,
+                                                 uint32_t idx)
+    __attribute__((weak));
+#else
+# error "Unsupported RSA_BITS: only RSA2048 and RSA4096 are wired to SVE2 x8 kernels"
+#endif
 
 typedef struct branch_st {
     BN_MONT_CTX *mont;
@@ -153,12 +186,14 @@ static int mode_to_runner(const char *mode, int (**fn)(BENCH *),
         *label = "native_no_blind_seq8_rsa_private_ns";
         return 1;
     }
-    if (strcmp(mode, "rsaz29_math") == 0) {
+    if (strcmp(mode, "rsaz28_math") == 0
+        || strcmp(mode, "rsaz29_math") == 0) {
         *fn = run_rsaz29_x8;
         *label = "rsaz29_x8_rsa_private_math_ns";
         return 1;
     }
-    if (strcmp(mode, "rsaz29_blind") == 0) {
+    if (strcmp(mode, "rsaz28_blind") == 0
+        || strcmp(mode, "rsaz29_blind") == 0) {
         *fn = run_rsaz29_x8_blinded;
         *label = "rsaz29_x8_rsa_private_blinded_ns";
         return 1;
@@ -209,7 +244,7 @@ static uint32_t neg_inv_mod_r29(uint32_t x)
 
 static uint32_t norm64_get_digit29(const uint64_t in[LIMBS64], int digit)
 {
-    int bit = digit * 29;
+    int bit = digit * RADIX_BITS;
     int word = bit >> 6;
     int shift = bit & 63;
     uint64_t v = 0;
@@ -278,7 +313,7 @@ static int red29_soa_to_bn_lanes(BIGNUM *out[LANES],
 
     memset(norm, 0, sizeof(norm));
     for (digit = 0; digit < LIMBS29; digit++) {
-        int bit = digit * 29;
+        int bit = digit * RADIX_BITS;
         int word = bit >> 6;
         int shift = bit & 63;
 
@@ -287,7 +322,7 @@ static int red29_soa_to_bn_lanes(BIGNUM *out[LANES],
 
             if (word < LIMBS64_RED)
                 norm[lane][word] |= v << shift;
-            if (shift > 64 - 29 && word + 1 < LIMBS64_RED)
+            if (shift > 64 - RADIX_BITS && word + 1 < LIMBS64_RED)
                 norm[lane][word + 1] |= v >> (64 - shift);
         }
     }
@@ -356,59 +391,29 @@ static void ct_gather_red29_soa_sve(uint32_t out[LIMBS29 * LANES],
                                                          * LIMBS29 * LANES],
                                     uint32_t idx)
 {
-    svbool_t pg = svwhilelt_b32((uint64_t)0, (uint64_t)LANES);
+    size_t total = (size_t)LIMBS29 * LANES;
     size_t pos;
     int entry;
 
-    if (ct_gather_red29_soa_sve_handasm != NULL) {
-        ct_gather_red29_soa_sve_handasm(out, table, idx);
+    if (CT_GATHER_SVE_FUNC != NULL) {
+        CT_GATHER_SVE_FUNC(out, table, idx);
         return;
     }
 
     {
         uint32_t mask = ct_eq_mask_u32(0, idx);
-        svuint32_t mv = svdup_n_u32(mask);
         const uint32_t *src = table;
 
-        for (pos = 0; pos < (size_t)LIMBS29 * LANES; pos += 4 * LANES) {
-            svuint32_t v0 = svld1_u32(pg, src);
-            svuint32_t v1 = svld1_u32(pg, src + LANES);
-            svuint32_t v2 = svld1_u32(pg, src + 2 * LANES);
-            svuint32_t v3 = svld1_u32(pg, src + 3 * LANES);
-
-            svst1_u32(pg, out + pos, svand_u32_x(pg, v0, mv));
-            svst1_u32(pg, out + pos + LANES, svand_u32_x(pg, v1, mv));
-            svst1_u32(pg, out + pos + 2 * LANES, svand_u32_x(pg, v2, mv));
-            svst1_u32(pg, out + pos + 3 * LANES, svand_u32_x(pg, v3, mv));
-            src += 4 * LANES;
-        }
+        for (pos = 0; pos < total; pos++)
+            out[pos] = src[pos] & mask;
     }
 
     for (entry = 1; entry < TABLE_ENTRIES; entry++) {
         uint32_t mask = ct_eq_mask_u32((uint32_t)entry, idx);
-        svuint32_t mv = svdup_n_u32(mask);
         const uint32_t *src = table + (size_t)entry * LIMBS29 * LANES;
 
-        for (pos = 0; pos < (size_t)LIMBS29 * LANES; pos += 4 * LANES) {
-            svuint32_t old0 = svld1_u32(pg, out + pos);
-            svuint32_t old1 = svld1_u32(pg, out + pos + LANES);
-            svuint32_t old2 = svld1_u32(pg, out + pos + 2 * LANES);
-            svuint32_t old3 = svld1_u32(pg, out + pos + 3 * LANES);
-            svuint32_t v0 = svld1_u32(pg, src);
-            svuint32_t v1 = svld1_u32(pg, src + LANES);
-            svuint32_t v2 = svld1_u32(pg, src + 2 * LANES);
-            svuint32_t v3 = svld1_u32(pg, src + 3 * LANES);
-
-            old0 = svorr_u32_x(pg, old0, svand_u32_x(pg, v0, mv));
-            old1 = svorr_u32_x(pg, old1, svand_u32_x(pg, v1, mv));
-            old2 = svorr_u32_x(pg, old2, svand_u32_x(pg, v2, mv));
-            old3 = svorr_u32_x(pg, old3, svand_u32_x(pg, v3, mv));
-            svst1_u32(pg, out + pos, old0);
-            svst1_u32(pg, out + pos + LANES, old1);
-            svst1_u32(pg, out + pos + 2 * LANES, old2);
-            svst1_u32(pg, out + pos + 3 * LANES, old3);
-            src += 4 * LANES;
-        }
+        for (pos = 0; pos < total; pos++)
+            out[pos] |= src[pos] & mask;
     }
 }
 
@@ -421,7 +426,7 @@ static void precompute_sve(BENCH *b, const BRANCH *br)
            LIMBS29 * LANES * sizeof(b->table29[0]));
 
     for (entry = 2; entry < TABLE_ENTRIES; entry++) {
-        amm29_fused_lazy_sve2_x8_handasm(
+        AMM_SVE2_X8_FUNC(
             b->table29 + (size_t)entry * LIMBS29 * LANES,
             b->table29 + (size_t)(entry - 1) * LIMBS29 * LANES, b->base29,
             br->mod29, br->n0_b, br->n0_t);
@@ -436,13 +441,11 @@ static void modexp_sve(BENCH *b, const BRANCH *br)
     ct_gather_red29_soa_sve(b->result29, b->table29, br->windows[0]);
     for (w = 1; w < WINDOWS; w++) {
         for (s = 0; s < WINDOW_BITS; s++)
-            amm29_fused_sqr_lazy_sve2_x8_handasm(b->result29, b->result29,
-                                                 br->mod29, br->n0_b,
-                                                 br->n0_t);
+            AMM_SVE2_X8_SQR_FUNC(b->result29, b->result29, br->mod29,
+                                 br->n0_b, br->n0_t);
         ct_gather_red29_soa_sve(b->gathered29, b->table29, br->windows[w]);
-        amm29_fused_lazy_sve2_x8_handasm(b->result29, b->result29,
-                                         b->gathered29, br->mod29, br->n0_b,
-                                         br->n0_t);
+        AMM_SVE2_X8_FUNC(b->result29, b->result29, b->gathered29, br->mod29,
+                         br->n0_b, br->n0_t);
     }
 }
 
@@ -464,7 +467,7 @@ static int setup_branch(BENCH *b, BRANCH *br, const BIGNUM *mod,
     BN_set_flags(mod_ct, BN_FLG_CONSTTIME);
     if (!BN_MONT_CTX_set(br->mont, mod, b->ctx)
         || !BN_one(br->r29_mod)
-        || !BN_lshift(br->r29_mod, br->r29_mod, LIMBS29 * 29)
+        || !BN_lshift(br->r29_mod, br->r29_mod, LIMBS29 * RADIX_BITS)
         || !BN_nnmod(br->r29_mod, br->r29_mod, mod, b->ctx)
         || !bn_repeated_to_red29_soa(br->mod29, mod)
         || !bn_repeated_to_red29_soa(br->one29, br->r29_mod))
@@ -596,8 +599,7 @@ static int prepare_bench(BENCH *b)
     const BIGNUM *dmp1 = NULL, *dmq1 = NULL, *iqmp = NULL;
     int ret = 0;
 
-    if (amm29_fused_lazy_sve2_x8_handasm == NULL
-        || amm29_fused_sqr_lazy_sve2_x8_handasm == NULL)
+    if (AMM_SVE2_X8_FUNC == NULL || AMM_SVE2_X8_SQR_FUNC == NULL)
         return 0;
 
     if (!alloc_bench(b))
@@ -688,9 +690,8 @@ static int finish_branch_outputs(BENCH *b, const BRANCH *br,
 {
     int lane;
 
-    amm29_fused_lazy_sve2_x8_handasm(b->base29, b->result29,
-                                     br->normal_one29, br->mod29, br->n0_b,
-                                     br->n0_t);
+    AMM_SVE2_X8_FUNC(b->base29, b->result29, br->normal_one29, br->mod29,
+                     br->n0_b, br->n0_t);
 
     if (!red29_soa_to_bn_lanes(monted, b->base29))
         return 0;
@@ -870,17 +871,18 @@ int main(int argc, char **argv)
         ERR_print_errors_fp(stderr);
         goto err;
     }
+    printf("correctness=PASS\n");
 
     if (single_mode > 0) {
         if (!bench_loop(&bench, iters, single_fn, &single_ns)) {
             fprintf(stderr,
-                    "rsa2048_private_rsaz29_x8_bench: benchmark failed\n");
+                    "rsa_private_rsaz29_x8_bench: benchmark failed\n");
             ERR_print_errors_fp(stderr);
             goto err;
         }
 
-        printf("rsa2048_private_rsaz29_x8_bench iterations=%d lanes=%d mode=%s\n",
-               iters, LANES, mode);
+        printf("rsa%d_private_rsaz29_x8_bench iterations=%d lanes=%d mode=%s\n",
+               RSA_BITS, iters, LANES, mode);
         printf("%s=%.2f\n", single_label, (double)single_ns / iters);
         printf("sink=%u\n", bench.sink);
         ret = EXIT_SUCCESS;
@@ -892,13 +894,13 @@ int main(int argc, char **argv)
         || !bench_loop(&bench, iters, run_rsaz29_x8, &rsaz29_ns)
         || !bench_loop(&bench, iters, run_rsaz29_x8_blinded,
                        &rsaz29_blind_ns)) {
-        fprintf(stderr, "rsa2048_private_rsaz29_x8_bench: benchmark failed\n");
+        fprintf(stderr, "rsa_private_rsaz29_x8_bench: benchmark failed\n");
         ERR_print_errors_fp(stderr);
         goto err;
     }
 
-    printf("rsa2048_private_rsaz29_x8_bench iterations=%d lanes=%d\n", iters,
-           LANES);
+    printf("rsa%d_private_rsaz29_x8_bench iterations=%d lanes=%d\n", RSA_BITS,
+           iters, LANES);
     printf("native_default_seq8_rsa_private_ns=%.2f\n",
            (double)native_ns / iters);
     printf("native_no_blind_seq8_rsa_private_ns=%.2f\n",

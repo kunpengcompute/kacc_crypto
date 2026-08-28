@@ -16,30 +16,46 @@
 # include "crypto/arm_arch.h"
 
 # define GCM_SVE2_WINDOW_BYTES 8192
+/*
+ * The prefetching decrypt kernel is intentionally narrow: unit and nginx
+ * tests showed it helps 16KB-class decrypt records, while encrypt and larger
+ * buffers are better left on the non-prefetch kernels.
+ */
+# define GCM_SVE2_DEC_PREFETCH_BYTES 16384
+# define GCM_SVE2_DEC_PREFETCH_LIMIT 32768
+# define GCM_SVE2_PAIRTAB_ELEMS 1024
 
 extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_asm(
     const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
-    const AES_KEY *key, const u128 pairtab[1024],
+    const AES_KEY *key, const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS],
     const unsigned char ivec[16]);
 extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_12_asm(
     const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
-    const AES_KEY *key, const u128 pairtab[1024],
+    const AES_KEY *key, const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS],
     const unsigned char ivec[16]);
 extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_14_asm(
     const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
-    const AES_KEY *key, const u128 pairtab[1024],
+    const AES_KEY *key, const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS],
     const unsigned char ivec[16]);
 extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_10_asm(
     const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
-    const AES_KEY *key, const u128 pairtab[1024],
+    const AES_KEY *key, const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS],
     const unsigned char ivec[16]);
 extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_12_asm(
     const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
-    const AES_KEY *key, const u128 pairtab[1024],
+    const AES_KEY *key, const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS],
     const unsigned char ivec[16]);
 extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_14_asm(
     const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
-    const AES_KEY *key, const u128 pairtab[1024],
+    const AES_KEY *key, const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS],
+    const unsigned char ivec[16]);
+extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_10_pf_asm(
+    const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
+    const AES_KEY *key, const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS],
+    const unsigned char ivec[16]);
+extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_14_pf_asm(
+    const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
+    const AES_KEY *key, const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS],
     const unsigned char ivec[16]);
 
 static uint32_t gcm_sve2_get_be32(const unsigned char *p)
@@ -65,15 +81,16 @@ static void gcm_sve2_advance_ctr(unsigned char ivec[16], size_t blocks)
 
 static void gcm_sve2_clmul64(uint64_t out[2], uint64_t a, uint64_t b)
 {
-    unsigned __int128 r = 0;
-    unsigned int i;
-
-    for (i = 0; i < 64; i++) {
-        if (((b >> i) & 1) != 0)
-            r ^= (unsigned __int128)a << i;
-    }
-    out[0] = (uint64_t)r;
-    out[1] = (uint64_t)(r >> 64);
+    __asm__ volatile(
+        ".arch_extension crypto\n"
+        "fmov    d0, %x[a]\n"
+        "fmov    d1, %x[b]\n"
+        "pmull   v0.1q, v0.1d, v1.1d\n"
+        "umov    %x[lo], v0.d[0]\n"
+        "umov    %x[hi], v0.d[1]\n"
+        : [lo] "=r"(out[0]), [hi] "=r"(out[1])
+        : [a] "r"(a), [b] "r"(b)
+        : "v0", "v1");
 }
 
 static void gcm_sve2_xor128(uint64_t out[2], const uint64_t a[2],
@@ -123,19 +140,17 @@ static void gcm_sve2_mul_hpow(u128 *out, const u128 *a, const u128 *b)
 }
 
 static void gcm_sve2_precompute_pairtab(const u128 htable[16],
-                                        u128 pairtab[1024])
+                                        u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS])
 {
-    static const unsigned int base_idx[9] = { 0, 0, 2, 3, 5, 6, 8, 9, 11 };
     u128 hpow[513];
     size_t i, j;
 
     memset(hpow, 0, sizeof(hpow));
-    for (i = 1; i <= 8; i++)
-        hpow[i] = htable[base_idx[i]];
-    for (i = 9; i <= 512; i++)
+    hpow[1] = htable[0];
+    for (i = 2; i <= 512; i++)
         gcm_sve2_mul_hpow(&hpow[i], &hpow[i - 1], &hpow[1]);
 
-    memset(pairtab, 0, sizeof(u128) * 1024);
+    memset(pairtab, 0, sizeof(u128) * GCM_SVE2_PAIRTAB_ELEMS);
     for (j = 0; j < 256; j++) {
         size_t e0 = 512 - 2 * j;
         size_t e1 = e0 - 1;
@@ -154,6 +169,12 @@ static void gcm_sve2_precompute_pairtab(const u128 htable[16],
     }
 }
 
+void armv9_sve2_aes_gcm_precompute(const u128 htable[16],
+                                   u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS])
+{
+    gcm_sve2_precompute_pairtab(htable, pairtab);
+}
+
 static int gcm_sve2_capable(void)
 {
     return (OPENSSL_armcap_P & ARMV8_AES) != 0
@@ -164,11 +185,15 @@ static int gcm_sve2_capable(void)
 static size_t gcm_sve2_call_kernel(int enc, const unsigned char *in,
                                    unsigned char *out, size_t len,
                                    u64 Xi[2], const AES_KEY *key,
-                                   const u128 pairtab[1024],
+                                   const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS],
                                    const unsigned char ivec[16])
 {
     switch (key->rounds) {
     case 10:
+        if (!enc && len >= GCM_SVE2_DEC_PREFETCH_BYTES
+            && len < GCM_SVE2_DEC_PREFETCH_LIMIT)
+            return gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_10_pf_asm(
+                in, out, len, Xi, key, pairtab, ivec);
         return enc
             ? gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_asm(
                   in, out, len, Xi, key, pairtab, ivec)
@@ -181,6 +206,10 @@ static size_t gcm_sve2_call_kernel(int enc, const unsigned char *in,
             : gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_12_asm(
                   in, out, len, Xi, key, pairtab, ivec);
     case 14:
+        if (!enc && len >= GCM_SVE2_DEC_PREFETCH_BYTES
+            && len < GCM_SVE2_DEC_PREFETCH_LIMIT)
+            return gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_14_pf_asm(
+                in, out, len, Xi, key, pairtab, ivec);
         return enc
             ? gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_14_asm(
                   in, out, len, Xi, key, pairtab, ivec)
@@ -194,18 +223,18 @@ static size_t gcm_sve2_call_kernel(int enc, const unsigned char *in,
 static size_t gcm_sve2_aes_gcm_crypt(int enc, const unsigned char *in,
                                      unsigned char *out, size_t len,
                                      const void *key, unsigned char ivec[16],
-                                     u64 Xi[2], const u128 htable[16])
+                                     u64 Xi[2],
+                                     const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS])
 {
     const AES_KEY *aes_key = (const AES_KEY *)key;
     size_t align_bytes = len - len % 16;
     size_t done;
-    u128 pairtab[1024];
 
-    if (!gcm_sve2_capable() || align_bytes < GCM_SVE2_WINDOW_BYTES)
+    if (!gcm_sve2_capable() || pairtab == NULL
+        || align_bytes < GCM_SVE2_WINDOW_BYTES)
         return enc ? armv8_aes_gcm_encrypt(in, out, len, key, ivec, Xi)
                    : armv8_aes_gcm_decrypt(in, out, len, key, ivec, Xi);
 
-    gcm_sve2_precompute_pairtab(htable, pairtab);
     done = gcm_sve2_call_kernel(enc, in, out, align_bytes, Xi, aes_key,
                                 pairtab, ivec);
     if (done == 0)
@@ -227,17 +256,17 @@ static size_t gcm_sve2_aes_gcm_crypt(int enc, const unsigned char *in,
 
 size_t armv9_sve2_aes_gcm_encrypt(const unsigned char *in, unsigned char *out,
                                   size_t len, const void *key,
-                                  unsigned char ivec[16], u64 Xi[2],
-                                  const u128 htable[16])
+                                  unsigned char ivec[16], u64 *Xi,
+                                  const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS])
 {
-    return gcm_sve2_aes_gcm_crypt(1, in, out, len, key, ivec, Xi, htable);
+    return gcm_sve2_aes_gcm_crypt(1, in, out, len, key, ivec, Xi, pairtab);
 }
 
 size_t armv9_sve2_aes_gcm_decrypt(const unsigned char *in, unsigned char *out,
                                   size_t len, const void *key,
-                                  unsigned char ivec[16], u64 Xi[2],
-                                  const u128 htable[16])
+                                  unsigned char ivec[16], u64 *Xi,
+                                  const u128 pairtab[GCM_SVE2_PAIRTAB_ELEMS])
 {
-    return gcm_sve2_aes_gcm_crypt(0, in, out, len, key, ivec, Xi, htable);
+    return gcm_sve2_aes_gcm_crypt(0, in, out, len, key, ivec, Xi, pairtab);
 }
 #endif

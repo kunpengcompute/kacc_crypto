@@ -51,7 +51,6 @@ extern void sve2_aes_xts_256_decrypt(const unsigned char *in,
 #define ALIGNMENT 64
 #define REPEATS 5
 #define TARGET_BYTES (4ULL * 1024 * 1024 * 1024)
-#define TARGET_SPEEDUP 1.10
 
 typedef void (*xts_fn)(const unsigned char *, unsigned char *, size_t,
                        const AES_KEY *, const AES_KEY *,
@@ -69,6 +68,14 @@ struct bench_case {
     xts_fn native_fn;
     xts_fn sve2_fn;
     const char *native_label;
+};
+
+struct bench_result {
+    size_t size;
+    unsigned int iterations;
+    double native_avg;
+    double sve2_avg;
+    double uplift;
 };
 
 static double now_sec(void)
@@ -155,7 +162,8 @@ static int report_mismatch(const struct bench_case *bc, size_t len,
 
 static int benchmark_size(const struct bench_case *bc, size_t len,
                           const AES_KEY *enc_data, const AES_KEY *dec_data,
-                          const AES_KEY *tweak, const unsigned char *iv)
+                          const AES_KEY *tweak, const unsigned char *iv,
+                          struct bench_result *result)
 {
     unsigned char *plain = alloc_aligned(len);
     unsigned char *cipher = alloc_aligned(len);
@@ -168,8 +176,6 @@ static int benchmark_size(const struct bench_case *bc, size_t len,
     const AES_KEY *native_data_key;
     const AES_KEY *sve2_data_key;
     unsigned int iterations = iterations_for(len);
-    double best_native = 1.0e100;
-    double best_sve2 = 1.0e100;
     double sum_native = 0.0;
     double sum_sve2 = 0.0;
     int r;
@@ -239,10 +245,6 @@ static int benchmark_size(const struct bench_case *bc, size_t len,
                              sve2_data_key, tweak, iv, iterations);
         }
 
-        if (t_native < best_native)
-            best_native = t_native;
-        if (t_sve2 < best_sve2)
-            best_sve2 = t_sve2;
         sum_native += t_native;
         sum_sve2 += t_sve2;
     }
@@ -250,16 +252,12 @@ static int benchmark_size(const struct bench_case *bc, size_t len,
     {
         double bytes = (double)len * (double)iterations;
         double gb = bytes / (1024.0 * 1024.0 * 1024.0);
-        double native_best = gb / best_native;
-        double sve2_best = gb / best_sve2;
-        double native_avg = gb / (sum_native / REPEATS);
-        double sve2_avg = gb / (sum_sve2 / REPEATS);
-        double target_best = native_best * TARGET_SPEEDUP;
 
-        printf("%8zu %10u %12.2f %12.2f %12.2f %12.2f %11.2f %9.2f%% %11.2f%%\n",
-               len, iterations, native_best, sve2_best, native_avg, sve2_avg,
-               target_best, (sve2_best / native_best - 1.0) * 100.0,
-               (sve2_best / target_best - 1.0) * 100.0);
+        result->size = len;
+        result->iterations = iterations;
+        result->native_avg = gb / (sum_native / REPEATS);
+        result->sve2_avg = gb / (sum_sve2 / REPEATS);
+        result->uplift = (result->sve2_avg / result->native_avg - 1.0) * 100.0;
     }
 
     free(plain);
@@ -272,8 +270,9 @@ static int benchmark_size(const struct bench_case *bc, size_t len,
 static int benchmark_case(const struct bench_case *bc)
 {
     static const size_t sizes[] = {
-        512, 4096, 8192, 16384
+        512, 4096, 8192, 16384, 65536
     };
+    struct bench_result results[sizeof(sizes) / sizeof(sizes[0])];
     unsigned char key_data[32];
     unsigned char key_tweak[32];
     unsigned char iv[16] = {
@@ -285,7 +284,10 @@ static int benchmark_case(const struct bench_case *bc)
     AES_KEY tweak;
     size_t key_len = (size_t)bc->bits / 8;
     size_t i;
-    int ok = 1;
+    double native_sum = 0.0;
+    double sve2_sum = 0.0;
+    double native_mean;
+    double sve2_mean;
 
     fill_key(key_data, key_len, 0x21);
     fill_key(key_tweak, key_len, 0x9d);
@@ -301,16 +303,37 @@ static int benchmark_case(const struct bench_case *bc)
     printf("Native reference: %s\n", bc->native_label);
     printf("Repeats: %d | Target bytes per repeat: %llu\n", REPEATS,
            (unsigned long long)TARGET_BYTES);
-    printf("Goal: SVE2 >= native * %.2f\n", TARGET_SPEEDUP);
-    printf("    size iterations native_best    sve2_best   native_avg     sve2_avg target_best   speedup target_gap\n");
-    printf("--------------------------------------------------------------------------------------------------------\n");
 
     for (i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
-        if (!benchmark_size(bc, sizes[i], &enc_data, &dec_data, &tweak, iv))
-            ok = 0;
+        if (!benchmark_size(bc, sizes[i], &enc_data, &dec_data, &tweak, iv,
+                            &results[i]))
+            return 0;
+        native_sum += results[i].native_avg;
+        sve2_sum += results[i].sve2_avg;
     }
 
-    return ok;
+    native_mean = native_sum / (double)(sizeof(sizes) / sizeof(sizes[0]));
+    sve2_mean = sve2_sum / (double)(sizeof(sizes) / sizeof(sizes[0]));
+
+    printf("Average throughput over listed sizes, values are GB/s:\n");
+    printf("%-12s", "metric");
+    for (i = 0; i < sizeof(results) / sizeof(results[0]); i++)
+        printf(" %9zuB", results[i].size);
+    printf(" %9s\n", "mean");
+    printf("%-12s", "native_avg");
+    for (i = 0; i < sizeof(results) / sizeof(results[0]); i++)
+        printf(" %10.2f", results[i].native_avg);
+    printf(" %9.2f\n", native_mean);
+    printf("%-12s", "sve2_avg");
+    for (i = 0; i < sizeof(results) / sizeof(results[0]); i++)
+        printf(" %10.2f", results[i].sve2_avg);
+    printf(" %9.2f\n", sve2_mean);
+    printf("%-12s", "uplift");
+    for (i = 0; i < sizeof(results) / sizeof(results[0]); i++)
+        printf(" %+9.2f%%", results[i].uplift);
+    printf(" %+8.2f%%\n", (sve2_mean / native_mean - 1.0) * 100.0);
+
+    return 1;
 }
 
 int main(void)
