@@ -23,9 +23,8 @@ if [ -z "${openssl_dir}" ]; then
 fi
 
 if [ ! -d "${openssl_dir}/crypto/bn/asm" ] \
-   || [ ! -d "${openssl_dir}/test" ] \
-   || [ ! -f "${openssl_dir}/libcrypto.a" ]; then
-    echo "error: OPENSSL_DIR must be a built OpenSSL source tree with libcrypto.a: ${openssl_dir}" >&2
+   || [ ! -d "${openssl_dir}/test" ]; then
+    echo "error: OPENSSL_DIR must be an OpenSSL source tree: ${openssl_dir}" >&2
     exit 2
 fi
 
@@ -35,3 +34,6 @@ install -m 0644 \
 install -m 0644 \
     "${repo_dir}/openssl/test/rsa2048_private_rsaz29_x8_bench.c" \
     "${openssl_dir}/test/rsa2048_private_rsaz29_x8_bench.c"
+install -m 0644 \
+    "${repo_dir}/openssl/test/rsa4096_private_rsaz29_x8_bench.c" \
+    "${openssl_dir}/test/rsa4096_private_rsaz29_x8_bench.c"

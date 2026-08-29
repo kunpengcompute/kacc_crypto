@@ -359,7 +359,6 @@ sub ctr32_ghash_hpow512_pairtab2_eor3_fused_probe {
 .type   gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_fused_asm,%function
 .align  4
 gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_fused_asm:
-    AARCH64_VALID_CALL_TARGET
     cntb    x7
     cmp     x7, #32
     b.ne    .Lctrghh512pt2e3_ret0
@@ -617,11 +616,12 @@ ___
 }
 
 sub emit_ctrghh512pt2e3_ctrtpl_tmpnorm_dec_two_batches {
-    my ($prefix, $with_xi, $xi_cmp, $rounds) = @_;
+    my ($prefix, $with_xi, $xi_cmp, $rounds, $prefetch_h) = @_;
     my $ret = "";
     $rounds = 10 if !defined($rounds);
     my $xor_key = $rounds == 10 ? "z18" : "z6";
 
+    $ret .= "    prfm    pldl1keep, [x14, #512]\n" if $prefetch_h;
     for (my $i = 0; $i < 4; $i++) {
         $ret .= <<___;
     ld1b    {z$i.b}, p0/z, [x10, #$i, mul vl]
@@ -885,11 +885,12 @@ ___
 }
 
 sub ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe {
-    my ($rounds) = @_;
-    my $label = "ctrghh512pt2e3ctnd${rounds}";
+    my ($rounds, $suffix, $prefetch_h) = @_;
+    $suffix = "" if !defined($suffix);
+    my $label = "ctrghh512pt2e3ctnd${rounds}${suffix}";
     my $ret = ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_probe();
 
-    $ret =~ s/gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_asm/gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_${rounds}_asm/g;
+    $ret =~ s/gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_asm/gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_${rounds}${suffix}_asm/g;
     $ret =~ s/ctrghh512pt2e3ctn/$label/g;
 
     my $round_check_old = <<___;
@@ -952,7 +953,8 @@ ___
                                                              undef, 10);
     my $new = emit_ctrghh512pt2e3_ctrtpl_tmpnorm_dec_two_batches($label, 1,
                                                                  undef,
-                                                                 $rounds);
+                                                                 $rounds,
+                                                                 $prefetch_h);
     $ret =~ s/\Q$old\E/$new/
         or die "failed to patch ctrtpl dec loop $rounds";
 
@@ -1035,6 +1037,8 @@ $code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_rounds_probe(14)
 $code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe(10);
 $code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe(12);
 $code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe(14);
+$code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe(10, "_pf", 1);
+$code .= ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_rounds_probe(14, "_pf", 1);
 $code .= <<___;
 
 .rodata

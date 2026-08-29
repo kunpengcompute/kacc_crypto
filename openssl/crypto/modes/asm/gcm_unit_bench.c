@@ -21,34 +21,40 @@
 #  include <arm_sve.h>
 # endif
 
+# if defined(__GNUC__)
+#  define GCM_BENCH_WEAK __attribute__((weak))
+# else
+#  define GCM_BENCH_WEAK
+# endif
+
 extern void aes_v8_ctr32_encrypt_blocks(const unsigned char *in,
                                         unsigned char *out, size_t blocks,
                                         const void *key,
                                         const unsigned char ivec[16]);
 extern void aes_v8_ctr32_encrypt_blocks_unroll12_eor3(
     const unsigned char *in, unsigned char *out, size_t blocks,
-    const void *key, const unsigned char ivec[16]);
+    const void *key, const unsigned char ivec[16]) GCM_BENCH_WEAK;
 extern void gcm_init_v8(u128 Htable[16], const u64 H[2]);
 extern void gcm_ghash_v8(u64 Xi[2], const u128 Htable[16],
                          const u8 *inp, size_t len);
 extern size_t unroll8_eor3_aes_gcm_enc_128_kernel(
     const unsigned char *in, uint64_t len, unsigned char *out, u64 Xi[2],
-    unsigned char ivec[16], const void *key);
+    unsigned char ivec[16], const void *key) GCM_BENCH_WEAK;
 extern size_t unroll8_eor3_aes_gcm_enc_192_kernel(
     const unsigned char *in, uint64_t len, unsigned char *out, u64 Xi[2],
-    unsigned char ivec[16], const void *key);
+    unsigned char ivec[16], const void *key) GCM_BENCH_WEAK;
 extern size_t unroll8_eor3_aes_gcm_enc_256_kernel(
     const unsigned char *in, uint64_t len, unsigned char *out, u64 Xi[2],
-    unsigned char ivec[16], const void *key);
+    unsigned char ivec[16], const void *key) GCM_BENCH_WEAK;
 extern size_t unroll8_eor3_aes_gcm_dec_128_kernel(
     const unsigned char *in, uint64_t len, unsigned char *out, u64 Xi[2],
-    unsigned char ivec[16], const void *key);
+    unsigned char ivec[16], const void *key) GCM_BENCH_WEAK;
 extern size_t unroll8_eor3_aes_gcm_dec_192_kernel(
     const unsigned char *in, uint64_t len, unsigned char *out, u64 Xi[2],
-    unsigned char ivec[16], const void *key);
+    unsigned char ivec[16], const void *key) GCM_BENCH_WEAK;
 extern size_t unroll8_eor3_aes_gcm_dec_256_kernel(
     const unsigned char *in, uint64_t len, unsigned char *out, u64 Xi[2],
-    unsigned char ivec[16], const void *key);
+    unsigned char ivec[16], const void *key) GCM_BENCH_WEAK;
 
 # if defined(__ARM_FEATURE_SVE2_AES) && defined(GCM_BENCH_USE_ASM_SVE2)
 extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_asm(
@@ -72,6 +78,14 @@ extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_de
     const AES_KEY *key, const u128 pairtab[1024],
     const unsigned char ivec[16]);
 extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_14_asm(
+    const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
+    const AES_KEY *key, const u128 pairtab[1024],
+    const unsigned char ivec[16]);
+extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_10_pf_asm(
+    const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
+    const AES_KEY *key, const u128 pairtab[1024],
+    const unsigned char ivec[16]);
+extern size_t gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_14_pf_asm(
     const unsigned char *in, unsigned char *out, size_t len, u64 Xi[2],
     const AES_KEY *key, const u128 pairtab[1024],
     const unsigned char ivec[16]);
@@ -144,15 +158,16 @@ static void fill_input(unsigned char *buf, size_t len)
 
 static void clmul64(uint64_t out[2], uint64_t a, uint64_t b)
 {
-    unsigned __int128 r = 0;
-    unsigned int i;
-
-    for (i = 0; i < 64; i++) {
-        if (((b >> i) & 1) != 0)
-            r ^= (unsigned __int128)a << i;
-    }
-    out[0] = (uint64_t)r;
-    out[1] = (uint64_t)(r >> 64);
+    __asm__ volatile(
+        ".arch_extension crypto\n"
+        "fmov    d0, %x[a]\n"
+        "fmov    d1, %x[b]\n"
+        "pmull   v0.1q, v0.1d, v1.1d\n"
+        "umov    %x[lo], v0.d[0]\n"
+        "umov    %x[hi], v0.d[1]\n"
+        : [lo] "=r"(out[0]), [hi] "=r"(out[1])
+        : [a] "r"(a), [b] "r"(b)
+        : "v0", "v1");
 }
 
 static void xor128(uint64_t out[2], const uint64_t a[2],
@@ -202,14 +217,12 @@ static void mul_hpow(u128 *out, const u128 *a, const u128 *b)
 
 static void precompute_pairtab(const u128 htable[16], u128 pairtab[1024])
 {
-    static const unsigned int base_idx[9] = { 0, 0, 2, 3, 5, 6, 8, 9, 11 };
     u128 hpow[513];
     size_t i, j;
 
     memset(hpow, 0, sizeof(hpow));
-    for (i = 1; i <= 8; i++)
-        hpow[i] = htable[base_idx[i]];
-    for (i = 9; i <= 512; i++)
+    hpow[1] = htable[0];
+    for (i = 2; i <= 512; i++)
         mul_hpow(&hpow[i], &hpow[i - 1], &hpow[1]);
 
     memset(pairtab, 0, sizeof(u128) * 1024);
@@ -254,16 +267,28 @@ static size_t call_neon(int bits, int enc, const unsigned char *in,
     memcpy(ctr, ivec, sizeof(ctr));
     switch (bits) {
     case 128:
+        if (enc && unroll8_eor3_aes_gcm_enc_128_kernel == NULL)
+            return 0;
+        if (!enc && unroll8_eor3_aes_gcm_dec_128_kernel == NULL)
+            return 0;
         return enc ? unroll8_eor3_aes_gcm_enc_128_kernel(
                          in, len * 8, out, xi, ctr, key)
                    : unroll8_eor3_aes_gcm_dec_128_kernel(
                          in, len * 8, out, xi, ctr, key);
     case 192:
+        if (enc && unroll8_eor3_aes_gcm_enc_192_kernel == NULL)
+            return 0;
+        if (!enc && unroll8_eor3_aes_gcm_dec_192_kernel == NULL)
+            return 0;
         return enc ? unroll8_eor3_aes_gcm_enc_192_kernel(
                          in, len * 8, out, xi, ctr, key)
                    : unroll8_eor3_aes_gcm_dec_192_kernel(
                          in, len * 8, out, xi, ctr, key);
     case 256:
+        if (enc && unroll8_eor3_aes_gcm_enc_256_kernel == NULL)
+            return 0;
+        if (!enc && unroll8_eor3_aes_gcm_dec_256_kernel == NULL)
+            return 0;
         return enc ? unroll8_eor3_aes_gcm_enc_256_kernel(
                          in, len * 8, out, xi, ctr, key)
                    : unroll8_eor3_aes_gcm_dec_256_kernel(
@@ -278,7 +303,10 @@ static int call_ctr_ghash(int enc, const unsigned char *in,
                           const AES_KEY *key, const u128 htable[16],
                           const unsigned char ivec[16])
 {
-    aes_v8_ctr32_encrypt_blocks_unroll12_eor3(in, out, len / 16, key, ivec);
+    if (aes_v8_ctr32_encrypt_blocks_unroll12_eor3 != NULL)
+        aes_v8_ctr32_encrypt_blocks_unroll12_eor3(in, out, len / 16, key, ivec);
+    else
+        aes_v8_ctr32_encrypt_blocks(in, out, len / 16, key, ivec);
     gcm_ghash_v8(xi, htable, enc ? out : in, len);
     return 1;
 }
@@ -291,6 +319,9 @@ static size_t call_sve2_kernel(int bits, int enc, const unsigned char *in,
 # if defined(__ARM_FEATURE_SVE2_AES) && defined(GCM_BENCH_USE_ASM_SVE2)
     switch (bits) {
     case 128:
+        if (!enc && len >= 16384 && len < 32768)
+            return gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_10_pf_asm(
+                in, out, len, xi, key, pairtab, ivec);
         return enc
             ? gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_asm(
                   in, out, len, xi, key, pairtab, ivec)
@@ -303,6 +334,9 @@ static size_t call_sve2_kernel(int bits, int enc, const unsigned char *in,
             : gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_12_asm(
                   in, out, len, xi, key, pairtab, ivec);
     case 256:
+        if (!enc && len >= 16384 && len < 32768)
+            return gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_dec_14_pf_asm(
+                in, out, len, xi, key, pairtab, ivec);
         return enc
             ? gcm_sve2_ctr32_ghash_hpow512_pairtab2_eor3_ctrtpl_tmpnorm_fused_14_asm(
                   in, out, len, xi, key, pairtab, ivec)
@@ -420,8 +454,11 @@ static int run_prepared(enum gcm_unit unit, const struct bench_ctx *ctx,
     case U_NEON_128_DEC:
     case U_NEON_192_DEC:
     case U_NEON_256_DEC:
-        return call_neon(ctx->bits, ctx->enc, in, out, len, xi,
-                         &ctx->key, kIv) == len;
+        if (call_neon(ctx->bits, ctx->enc, in, out, len, xi,
+                      &ctx->key, kIv) == len)
+            return 1;
+        return call_ctr_ghash(ctx->enc, in, out, len, xi, &ctx->key,
+                              ctx->htable, kIv);
     case U_SVE2_128_ENC:
     case U_SVE2_192_ENC:
     case U_SVE2_256_ENC:
@@ -461,6 +498,18 @@ static int verify_one(int bits, int enc, enum gcm_unit unit)
         if (!run_prepared(unit, &ctx, input, got, lengths[i], got_xi)
             || memcmp(ref, got, lengths[i]) != 0
             || ref_xi[0] != got_xi[0] || ref_xi[1] != got_xi[1]) {
+            size_t j;
+
+            for (j = 0; j < lengths[i]; j++) {
+                if (ref[j] != got[j]) {
+                    fprintf(stderr,
+                            "ciphertext mismatch byte=%zu ref=%02x got=%02x\n",
+                            j, ref[j], got[j]);
+                    break;
+                }
+            }
+            if (j == lengths[i])
+                fprintf(stderr, "ciphertext match; GHASH Xi mismatch\n");
             fprintf(stderr,
                     "verify failed bits=%d enc=%d len=%zu ref_xi=%016llx%016llx got_xi=%016llx%016llx\n",
                     bits, enc, lengths[i],

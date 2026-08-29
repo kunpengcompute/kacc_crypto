@@ -37,10 +37,14 @@ install -m 0644 \
 install -m 0644 \
     "${repo_dir}/openssl/crypto/aes/asm/sve2_performance_test.c" \
     "${openssl_dir}/crypto/aes/asm/sve2_performance_test.c"
+install -m 0755 \
+    "${repo_dir}/openssl/crypto/aes/asm/run_all_tests.sh" \
+    "${openssl_dir}/crypto/aes/asm/run_all_tests.sh"
 
 OPENSSL_DIR="${openssl_dir}" python3 <<'PY'
 from pathlib import Path
 import os
+import re
 
 root = Path(os.environ["OPENSSL_DIR"])
 
@@ -60,18 +64,93 @@ def insert_after(path, anchor, addition):
         raise SystemExit(f"anchor not found in {path}: {anchor!r}")
     path.write_text(text.replace(anchor, anchor + addition, 1))
 
+def add_to_assignment(path, var, token, fallback_value=None):
+    text = path.read_text()
+    if token in text:
+        return
+    pattern = re.compile(rf"^(\s*{re.escape(var)}=)([^\n]*)$", re.M)
+    match = pattern.search(text)
+    if match is not None:
+        line = match.group(0)
+        path.write_text(text[:match.start()] + line + f" {token}" + text[match.end():])
+        return
+
+    alt = re.search(r"^(\s*\$AESASM_[A-Za-z0-9_]*=)([^\n]*aesv8-armx\.S[^\n]*)$", text, re.M)
+    if alt is not None:
+        line = alt.group(0)
+        path.write_text(text[:alt.start()] + line + f" {token}" + text[alt.end():])
+        return
+
+    if fallback_value is None:
+        raise SystemExit(f"assignment not found in {path}: {var}")
+    anchor = "IF[$AESASM_{- $target{asm_arch} -}]"
+    if anchor not in text:
+        raise SystemExit(f"assignment not found in {path}: {var}")
+    path.write_text(text.replace(anchor, f"{var}={fallback_value}\n{anchor}", 1))
+
+def insert_after_regex(path, pattern, addition, marker):
+    text = path.read_text()
+    if marker in text:
+        return
+    match = re.search(pattern, text, re.M)
+    if match is None:
+        raise SystemExit(f"anchor pattern not found in {path}: {pattern}")
+    path.write_text(text[:match.end()] + addition + text[match.end():])
+
+def patch_armv9_sve2_armcap(root):
+    arm_arch = root / "crypto/arm_arch.h"
+    text = arm_arch.read_text()
+    if "ARMV9_SVE2" not in text:
+        anchor = "# define ARMV8_CPUID     (1<<7)\n"
+        if anchor not in text:
+            raise SystemExit(f"ARMV8_CPUID anchor not found in {arm_arch}")
+        text = text.replace(
+            anchor,
+            anchor
+            + "# define ARMV8_SVE        (1<<13)\n"
+            + "# define ARMV9_SVE2       (1<<14)\n",
+            1,
+        )
+        arm_arch.write_text(text)
+
+    armcap = root / "crypto/armcap.c"
+    text = armcap.read_text()
+    if "KACC_HWCAP2_SVE2" not in text:
+        anchor = "#  define HWCAP_CE_SHA512        (1 << 21)\n"
+        if anchor not in text:
+            raise SystemExit(f"HWCAP_CE_SHA512 anchor not found in {armcap}")
+        text = text.replace(
+            anchor,
+            anchor
+            + "#  define KACC_HWCAP2             AT_HWCAP2\n"
+            + "#  define KACC_HWCAP2_SVE2        (1 << 1)\n",
+            1,
+        )
+    if "OPENSSL_armcap_P |= ARMV9_SVE2" not in text:
+        anchor = (
+            "        if (hwcap & HWCAP_CPUID)\n"
+            "            OPENSSL_armcap_P |= ARMV8_CPUID;\n"
+        )
+        if anchor not in text:
+            raise SystemExit(f"ARMV8_CPUID setup anchor not found in {armcap}")
+        text = text.replace(
+            anchor,
+            anchor
+            + "\n"
+            + "        if (getauxval(KACC_HWCAP2) & KACC_HWCAP2_SVE2)\n"
+            + "            OPENSSL_armcap_P |= ARMV9_SVE2;\n",
+            1,
+        )
+    armcap.write_text(text)
+
+patch_armv9_sve2_armcap(root)
+
 build_info = root / "crypto/aes/build.info"
-replace_once(
+add_to_assignment(
     build_info,
-    """  $AESASM_aarch64=\\
-        aes_core.c aes_cbc.c aesv8-armx.S bsaes-armv8.S vpaes-armv8.S \\
-        aes-sha1-armv8.S aes-sha256-armv8.S aes-sha512-armv8.S
-""",
-    """  $AESASM_aarch64=\\
-        aes_core.c aes_cbc.c aesv8-armx.S aesv8-armx-sve2.S \\
-        bsaes-armv8.S vpaes-armv8.S aes-sha1-armv8.S \\
-        aes-sha256-armv8.S aes-sha512-armv8.S
-""",
+    "$AESASM_aarch64",
+    "aesv8-armx-sve2.S",
+    "aes_core.c aes_cbc.c aesv8-armx.S aesv8-armx-sve2.S vpaes-armv8.S",
 )
 insert_after(
     build_info,
@@ -84,11 +163,9 @@ INCLUDE[aesv8-armx-sve2.o]=..
 )
 
 aes_platform = root / "include/crypto/aes_platform.h"
-insert_after(
+insert_after_regex(
     aes_platform,
-    """#define HWAES_xts_encrypt aes_v8_xts_encrypt
-#define HWAES_xts_decrypt aes_v8_xts_decrypt
-""",
+    r"^[ \t]*#[ \t]*define[ \t]+HWAES_xts_decrypt[ \t]+aes_v8_xts_decrypt[ \t]*\n",
     """#define ARMV9_SVE2_AES_XTS_CAPABLE \\
     ((OPENSSL_armcap_P & ARMV8_AES) && (OPENSSL_armcap_P & ARMV9_SVE2))
 void aes_v8_sve2_xts_128_encrypt(const unsigned char *inp,
@@ -116,15 +193,15 @@ void aes_v8_sve2_xts_256_decrypt(const unsigned char *inp,
     const AES_KEY *key1, const AES_KEY *key2,
     const unsigned char iv[16]);
 """,
+    "ARMV9_SVE2_AES_XTS_CAPABLE",
 )
 
 xts_hw = root / "providers/implementations/ciphers/cipher_aes_xts_hw.c"
-insert_after(
+insert_after_regex(
     xts_hw,
-    """#ifdef HWAES_xts_decrypt
-        stream_dec = HWAES_xts_decrypt;
-#endif /* HWAES_xts_decrypt */
-""",
+    r"^[ \t]*#[ \t]*ifdef[ \t]+HWAES_xts_decrypt\n"
+    r"[ \t]*stream_dec[ \t]*=[ \t]*HWAES_xts_decrypt;\n"
+    r"^[ \t]*#[ \t]*endif[^\n]*HWAES_xts_decrypt[^\n]*\n",
     """#ifdef ARMV9_SVE2_AES_XTS_CAPABLE
         if (ARMV9_SVE2_AES_XTS_CAPABLE) {
             switch (keylen) {
@@ -146,5 +223,6 @@ insert_after(
         }
 #endif /* ARMV9_SVE2_AES_XTS_CAPABLE */
 """,
+    "aes_v8_sve2_xts_128_encrypt",
 )
 PY
