@@ -20,19 +20,19 @@ AES-XTS优化接入OpenSSL AArch64 XTS底层stream分发层。应用不需要调
 
 ### 使用示例
 
-使用OpenSSL命令行验证AES-128-XTS加密吞吐。
+- 使用OpenSSL命令行验证AES-128-XTS加密吞吐。
 
-```bash
-cd /path/to/openssl
-./apps/openssl speed -elapsed -seconds 10 -evp aes-128-xts
-```
+   ```bash
+   cd /path/to/openssl
+   ./apps/openssl speed -elapsed -seconds 10 -evp aes-128-xts
+   ```
 
-如需直接对比SVE2与开源算法实现，可运行仓库提供的XTS测试脚本。
+- 如需直接对比SVE2与开源算法实现，可运行仓库提供的XTS测试脚本。
 
-```bash
-cd /path/to/kacc_crypto
-OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
-```
+   ```bash
+   cd /path/to/kacc_crypto
+   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
+   ```
 
 ## 使用AES-GCM优化
 

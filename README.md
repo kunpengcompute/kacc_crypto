@@ -118,13 +118,13 @@
 
 ### 安装基础软件
 
-以 yum系发行版为例。
+- 以 yum系发行版为例。
 
 ```shell
 sudo yum install -y git gcc make perl
 ```
 
-以 apt系发行版为例。
+- 以 apt系发行版为例。
 
 ```shell
 sudo apt-get update

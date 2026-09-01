@@ -112,6 +112,8 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_sve2_xts_dispatch.sh
 
 ### 编译OpenSSL
 
+执行以下命令。
+
 ```bash
 cd /path/to/openssl
 make -j$(nproc)
@@ -119,17 +121,19 @@ make -j$(nproc)
 
 ### 测试功能和性能
 
-```bash
-cd /path/to/kacc_crypto
-OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
-```
+1. 执行以下命令。
 
-如需打开额外性能分析项，可设置环境变量。
+   ```bash
+   cd /path/to/kacc_crypto
+   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
+   ```
 
-```bash
-RUN_KPERF=1 RUN_TWEAK_BENCH=1 \
-OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
-```
+2. 如需打开额外性能分析项，可设置环境变量。
+
+   ```bash
+   RUN_KPERF=1 RUN_TWEAK_BENCH=1 \
+   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
+   ```
 
 ## 安装与测试AES-GCM
 
@@ -171,25 +175,25 @@ cd /path/to/openssl/crypto/modes/asm
 
 ### 性能测试
 
-执行完整性能矩阵。
+1. 执行完整性能矩阵。
 
-```bash
-cd /path/to/openssl/crypto/modes/asm
-./run_all_gcm_tests.sh
-```
+   ```bash
+   cd /path/to/openssl/crypto/modes/asm
+   ./run_all_gcm_tests.sh
+   ```
 
-指定长度规格。
+2. 指定长度规格。
 
-```bash
-GCM_SPEED_SIZES="16 64 256 1024 8192 16384" ./run_all_gcm_tests.sh
-```
+   ```bash
+   GCM_SPEED_SIZES="16 64 256 1024 8192 16384" ./run_all_gcm_tests.sh
+   ```
 
-指定单项。
+3. 指定单项。
 
-```bash
-./run_gcm_unit_bench.sh --unit aes-128-gcm-sve2-enc --size 16384
-./run_gcm_unit_bench.sh --unit aes-256-gcm-sve2-dec --size 16384
-```
+   ```bash
+   ./run_gcm_unit_bench.sh --unit aes-128-gcm-sve2-enc --size 16384
+   ./run_gcm_unit_bench.sh --unit aes-256-gcm-sve2-dec --size 16384
+   ```
 
 ## 安装与测试RSA
 
