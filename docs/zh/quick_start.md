@@ -4,7 +4,7 @@
 
 KACC_Crypto是基于开源OpenSSL实现的密码算法优化库，当前包含AES-GCM、AES-XTS和RSA三类优化代码。AES-GCM与AES-XTS使用AArch64 SVE2指令提升对称密码大块处理能力，RSA使用8路多缓冲思路优化私钥CRT模幂热点。
 
-本文提供基于源码接入OpenSSL的快速上手流程，帮助用户完成代码获取、OpenSSL构建、优化代码接入和基础验证。
+本文提供基于源码接入OpenSSL的快速入门流程，帮助用户完成代码获取、OpenSSL构建、优化代码接入和基础验证。
 
 ## 前提条件
 
@@ -68,7 +68,7 @@ cd /path/to/kacc_crypto
 OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
 ```
 
-测试覆盖AES-128-XTS、AES-192-XTS、AES-256-XTS的加密和解密路径，输出中出现`PASS`表示SVE2结果与OpenSSL原生结果一致。
+测试覆盖AES-128-XTS、AES-192-XTS、AES-256-XTS的加密和解密路径，输出中出现`PASS`表示SVE2结果与OpenSSL开源结果一致。
 
 ## 验证AES-GCM
 
@@ -109,7 +109,7 @@ OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.sh
 RSA_BENCH_LINK=shared OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.sh
 ```
 
-## 后续操作
+## 学习文档
 
 - 如需了解完整环境要求、接入过程和测试命令，请参见[安装指南](./installation_guide.md)。
 - 如需了解安装后的调用方式，请参见[用户指南](./user_guide.md)。

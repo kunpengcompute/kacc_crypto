@@ -4,7 +4,7 @@
 
 ## 最新消息
 
-- [2026.09.30]：发布KACC_Crypto 1.0，新增AES-XTS SVE2优化、AES-GCM SVE2优化和RSA multi-buffer优化。
+- [2026.09.30]：发布KACC_Crypto V1.1.0，新增AES-XTS SVE2优化、AES-GCM SVE2优化和RSA multi-buffer优化。
 
 ## 项目介绍
 
@@ -18,24 +18,11 @@
 
 ### 软件架构
 
-`KACC_Crypto`以OpenSSL源码树为集成目标，通过接入脚本把优化源码、构建规则和分发逻辑写入OpenSSL对应模块。整体架构如[**图 1** 软件架构](#软件架构)所示。
+`KACC_Crypto`以OpenSSL源码树为集成目标，通过接入脚本把优化源码、构建规则和分发逻辑写入OpenSSL对应模块。整体架构如[**图 1** 软件架构](./docs/zh/figures/软件架构.png)所示。
 
 **图 1** 软件架构<a id="软件架构"></a>
 
-```text
-应用程序
-   |
-   | OpenSSL EVP/provider 接口
-   v
-OpenSSL AES-XTS / AES-GCM / RSA 入口
-   |
-   | 平台能力判断、长度阈值判断、key size 判断
-   v
-+-----------------------------+-----------------------------+
-| OpenSSL 开源路径            | KACC_Crypto 优化路径        |
-| ARMv8/NEON/BN 实现          | SVE2 AES/GHASH/RSA x8 实现  |
-+-----------------------------+-----------------------------+
-```
+![软件架构](./docs/zh/figures/软件架构.png "软件架构")
 
 软件架构中各模块功能如[**表 1** 模块功能描述](#模块功能描述)所示。
 
@@ -78,7 +65,8 @@ OpenSSL AES-XTS / AES-GCM / RSA 入口
 ├── docs                                      # 项目文档目录
 │   ├── LICENSE                               # 文档许可证
 │   └── zh                                    # 中文文档目录
-│       ├── installation_guide.md             # 安装指南
+│       ├── figures                           #文档图片资源
+        ├── installation_guide.md             # 安装指南
 │       ├── menu_kacc_crypto.md               # 文档菜单
 │       ├── quick_start.md                    # 快速入门
 │       ├── release_notes.md                  # 版本说明书
@@ -200,7 +188,7 @@ make -j$(nproc)
     taskset -c 10 test/rsa4096_private_rsaz29_x8_bench 200 all
     ```
 
-详细的源码获取、OpenSSL构建、优化代码接入和基础验证操作，请参见[快速入门](./docs/zh/quick_start.md)。
+更详细的源码获取、OpenSSL构建、优化代码接入和基础验证操作，请参见[快速入门](./docs/zh/quick_start.md)。
 
 ## 使用说明
 
@@ -246,7 +234,7 @@ taskset -c 10 test/rsa4096_private_rsaz29_x8_bench 200 all
 | [安装指南](./docs/zh/installation_guide.md) | 描述环境要求、三算法接入步骤、编译步骤和测试步骤。 |
 | [用户指南](./docs/zh/user_guide.md) | 描述AES-XTS、AES-GCM和RSA优化的使用入口、参数和验证方法。 |
 | [版本说明书](./docs/zh/release_notes.md) | 描述版本配套、能力范围、注意事项和遗留问题。 |
-| [文档许可证](./docs/LICENSE) | 说明文档许可证。 |
+| [文档许可证](./docs/LICENSE) | 文档许可证。 |
 
 ## License
 
