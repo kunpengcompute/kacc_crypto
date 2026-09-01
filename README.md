@@ -22,7 +22,7 @@
 
 **图 1** 软件架构<a id="软件架构"></a>
 
-![软件架构](./docs/zh/figures/software_architecture.png)
+![软件架构](./docs/zh/figures/软件架构.png "软件架构")
 
 软件架构中各模块功能如[**表 1** 模块功能描述](#模块功能描述)所示。
 
