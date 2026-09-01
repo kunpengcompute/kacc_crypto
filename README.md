@@ -22,20 +22,7 @@
 
 **图 1** 软件架构<a id="软件架构"></a>
 
-```text
-应用程序
-   |
-   | OpenSSL EVP/provider 接口
-   v
-OpenSSL AES-XTS / AES-GCM / RSA 入口
-   |
-   | 平台能力判断、长度阈值判断、key size 判断
-   v
-+-----------------------------+-----------------------------+
-| OpenSSL 开源路径            | KACC_Crypto 优化路径        |
-| ARMv8/NEON/BN 实现          | SVE2 AES/GHASH/RSA x8 实现  |
-+-----------------------------+-----------------------------+
-```
+![软件架构](./docs/zh/figures/software_architecture.png)
 
 软件架构中各模块功能如[**表 1** 模块功能描述](#模块功能描述)所示。
 
@@ -78,6 +65,7 @@ OpenSSL AES-XTS / AES-GCM / RSA 入口
 ├── docs                                      # 项目文档目录
 │   ├── LICENSE                               # 文档许可证
 │   └── zh                                    # 中文文档目录
+│       ├── figures                           # 文档图片资源
 │       ├── installation_guide.md             # 安装指南
 │       ├── menu_kacc_crypto.md               # 文档菜单
 │       ├── quick_start.md                    # 快速入门
