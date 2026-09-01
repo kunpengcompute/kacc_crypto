@@ -16,23 +16,23 @@ AES-XTS优化接入OpenSSL AArch64 XTS底层stream分发层。应用不需要调
 | 指令能力 | ARMv8 AES 与 SVE2 |
 | 算法 | AES-128-XTS、AES-192-XTS、AES-256-XTS |
 | 输入要求 | 16字节AES block粒度；XTS CTS和非对齐边界由OpenSSL上层处理 |
-| 回退路径 | 不满足条件时使用OpenSSL原生HWAES XTS |
+| 回退路径 | 不满足条件时使用OpenSSL开源HWAES XTS |
 
 ### 使用示例
 
-使用OpenSSL命令行验证AES-128-XTS加密吞吐。
+- 使用OpenSSL命令行验证AES-128-XTS加密吞吐。
 
-```bash
-cd /path/to/openssl
-./apps/openssl speed -elapsed -seconds 10 -evp aes-128-xts
-```
+   ```bash
+   cd /path/to/openssl
+   ./apps/openssl speed -elapsed -seconds 10 -evp aes-128-xts
+   ```
 
-如需直接对比SVE2与开源算法实现，可运行仓库提供的XTS测试脚本。
+- 如需直接对比SVE2与开源算法实现，可运行仓库提供的XTS测试脚本。
 
-```bash
-cd /path/to/kacc_crypto
-OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
-```
+   ```bash
+   cd /path/to/kacc_crypto
+   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
+   ```
 
 ## 使用AES-GCM优化
 
@@ -67,7 +67,7 @@ AES-GCM优化接入OpenSSL provider AES-GCM大块update路径。应用仍通过`
    OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_gcm.sh
    ```
 
-3. 指定OpenSSL speed常用长度规格：
+3. 指定OpenSSL speed常用长度规格。
 
    ```bash
    cd /path/to/openssl/crypto/modes/asm
@@ -78,7 +78,7 @@ AES-GCM优化接入OpenSSL provider AES-GCM大块update路径。应用仍通过`
 
 ### 调用方式
 
-RSA优化当前通过独立benchmark验证，不是OpenSSL对外RSA API的透明分发。benchmark会生成RSA key和8个独立ciphertext，分别运行OpenSSL原生路径和SVE2 x8 private CRT路径，并比较输出正确性和性能。
+RSA优化当前通过独立benchmark验证，不是OpenSSL对外RSA API的透明分发。benchmark会生成RSA key和8个独立ciphertext，分别运行OpenSSL开源路径和SVE2 x8 private CRT路径，并比较输出正确性和性能。
 
 ### 参数说明
 

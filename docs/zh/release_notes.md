@@ -23,7 +23,7 @@
 </tr>
 <tr id="row19308111718"><th class="firstcol" valign="top" width="42.17%" id="mcps1.1.3.3.1"><p id="p2030912172097"><a name="p2030912172097"></a><a name="p2030912172097"></a>软件版本</p>
 </th>
-<td class="cellrowborder" valign="top" width="57.830000000000005%" headers="mcps1.1.3.3.1 "><p id="p1730912179911"><a name="p1730912179911"></a><a name="p1730912179911"></a><span id="text17191017111119"><a name="text17191017111119"></a><a name="text17191017111119"></a>dev</span></p>
+<td class="cellrowborder" valign="top" width="57.830000000000005%" headers="mcps1.1.3.3.1 "><p id="p1730912179911"><a name="p1730912179911"></a><a name="p1730912179911"></a><span id="text17191017111119"><a name="text17191017111119"></a><a name="text17191017111119"></a>V1.1.0</span></p>
 </td>
 </tr>
 </tbody>
@@ -42,7 +42,7 @@
 
 | 软件版本 | 操作系统 | 依赖版本 |
 | --- | --- | --- |
-| `dev` | AArch64 Linux | OpenSSL 3.0.16源码树、GCC/Clang、make、perl |
+| V1.1.0 | AArch64 Linux | OpenSSL 3.0.16源码树、GCC/Clang、make、perl |
 
 > ![icon note](public_sys-resources/icon-note.gif) **说明：**
 >
@@ -57,7 +57,7 @@
 - RSA当前以独立benchmark方式验证RSA2048/RSA4096 private CRT数学运算，不是OpenSSL对外RSA API的透明分发。
 - 接入脚本通过源码锚点修改OpenSSL文件，目标OpenSSL版本差异较大时可能需要调整锚点。
 
-## dev
+## V1.1.0
 
 ### 更新说明
 
@@ -91,13 +91,13 @@
 
 | 问题编号 | 问题描述 | 影响范围 | 规避措施 |
 | --- | --- | --- | --- |
-| NA-001 | AES-XTS热路径不是通用可变VL实现。 | 非256bit SVE VL机器。 | 非验证环境保持原生路径或补充VL专用实现。 |
+| NA-001 | AES-XTS热路径不是通用可变VL实现。 | 非256bit SVE VL机器。 | 非验证环境保持开源路径或补充VL专用实现。 |
 | NA-002 | RSA目前通过独立benchmark验证。 | 应用通过OpenSSL RSA API调用的场景。 | 后续增加OpenSSL内部分发或批处理接口后再作为透明优化启用。 |
 | NA-003 | 接入脚本依赖OpenSSL源码锚点。 | 与验证版本差异较大的OpenSSL源码树。 | 使用匹配版本或按脚本报错锚点手动适配。 |
 
 ## 版本配套文档
 
-### dev版本配套文档
+### V1.1.0版本配套文档
 
 | 文档名称 | 说明 |
 | --- | --- |

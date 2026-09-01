@@ -32,13 +32,13 @@
 
 ### 安装依赖
 
-* yum系发行版
+- yum系发行版
 
   ```bash
   sudo yum install -y git gcc make perl
   ```
 
-* apt系发行版
+- apt系发行版
 
   ```bash
   sudo apt-get update
@@ -108,28 +108,32 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_sve2_xts_dispatch.sh
 | 拷贝源码 | 安装`aesv8-armx-sve2.pl`、`aesv8-armx-sve2.h`、`sve2_unit_tests.c`、`sve2_performance_test.c`。 |
 | 修改构建 | 在`crypto/aes/build.info`中加入`aesv8-armx-sve2.S`生成和编译目标。 |
 | 修改能力声明 | 在`include/crypto/aes_platform.h`中声明SVE2 XTS内部接口和能力宏。 |
-| 修改分发 | 在`cipher_aes_xts_hw.c`中按key size设置SVE2或原生stream。 |
+| 修改分发 | 在`cipher_aes_xts_hw.c`中按key size设置SVE2或开源stream。 |
 
 ### 编译OpenSSL
+
+执行以下命令。
 
 ```bash
 cd /path/to/openssl
 make -j$(nproc)
 ```
 
-### 功能和性能测试
+### 测试功能和性能
 
-```bash
-cd /path/to/kacc_crypto
-OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
-```
+1. 执行以下命令。
 
-如需打开额外性能分析项，可设置环境变量：
+   ```bash
+   cd /path/to/kacc_crypto
+   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
+   ```
 
-```bash
-RUN_KPERF=1 RUN_TWEAK_BENCH=1 \
-OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
-```
+2. 如需打开额外性能分析项，可设置环境变量。
+
+   ```bash
+   RUN_KPERF=1 RUN_TWEAK_BENCH=1 \
+   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
+   ```
 
 ## 安装与测试AES-GCM
 
@@ -171,25 +175,25 @@ cd /path/to/openssl/crypto/modes/asm
 
 ### 性能测试
 
-执行完整性能矩阵：
+1. 执行完整性能矩阵。
 
-```bash
-cd /path/to/openssl/crypto/modes/asm
-./run_all_gcm_tests.sh
-```
+   ```bash
+   cd /path/to/openssl/crypto/modes/asm
+   ./run_all_gcm_tests.sh
+   ```
 
-指定长度规格：
+2. 指定长度规格。
 
-```bash
-GCM_SPEED_SIZES="16 64 256 1024 8192 16384" ./run_all_gcm_tests.sh
-```
+   ```bash
+   GCM_SPEED_SIZES="16 64 256 1024 8192 16384" ./run_all_gcm_tests.sh
+   ```
 
-指定单项：
+3. 指定单项。
 
-```bash
-./run_gcm_unit_bench.sh --unit aes-128-gcm-sve2-enc --size 16384
-./run_gcm_unit_bench.sh --unit aes-256-gcm-sve2-dec --size 16384
-```
+   ```bash
+   ./run_gcm_unit_bench.sh --unit aes-128-gcm-sve2-enc --size 16384
+   ./run_gcm_unit_bench.sh --unit aes-256-gcm-sve2-dec --size 16384
+   ```
 
 ## 安装与测试RSA
 
@@ -214,7 +218,7 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
 
 ### 编译并运行
 
-* 编译并运行RSA2048 benchmark
+- 编译并运行RSA2048 benchmark
 
   ```bash
   cd /path/to/kacc_crypto
@@ -222,7 +226,7 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.sh
   ```
 
-* 编译并运行RSA4096 benchmark
+- 编译并运行RSA4096 benchmark
 
   ```bash
   cd /path/to/kacc_crypto
@@ -260,6 +264,6 @@ KACC_Crypto当前不提供自动卸载脚本。如需恢复目标OpenSSL源码�
 
 ## 修订记录
 
-| 文档版本 |发布日期 | 修改说明 |
-| ---- | ---- |-- |
-| 01 |2026-09-30 | 第一次正式发布。|
+| 文档版本 | 发布日期 | 修改说明 |
+| ---- | ---- | -- |
+| 01 | 2026-09-30 | 第一次正式发布。 |

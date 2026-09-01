@@ -4,7 +4,7 @@
 
 ## 最新消息
 
-- [2026.09.30]：发布KACC_Crypto 1.0，新增AES-XTS SVE2优化、AES-GCM SVE2优化和RSA multi-buffer优化。
+- [2026.09.30]：发布KACC_Crypto V1.1.0，新增AES-XTS SVE2优化、AES-GCM SVE2优化和RSA multi-buffer优化。
 
 ## 项目介绍
 
@@ -18,11 +18,11 @@
 
 ### 软件架构
 
-`KACC_Crypto`以OpenSSL源码树为集成目标，通过接入脚本把优化源码、构建规则和分发逻辑写入OpenSSL对应模块。整体架构如[**图 1** 软件架构](#软件架构)所示。
+`KACC_Crypto`以OpenSSL源码树为集成目标，通过接入脚本把优化源码、构建规则和分发逻辑写入OpenSSL对应模块。整体架构如[**图 1** 软件架构](./docs/zh/figures/软件架构.png)所示。
 
 **图 1** 软件架构<a id="软件架构"></a>
 
-![软件架构](./docs/zh/figures/software_architecture.png)
+![软件架构](./docs/zh/figures/软件架构.png "软件架构")
 
 软件架构中各模块功能如[**表 1** 模块功能描述](#模块功能描述)所示。
 
@@ -118,13 +118,13 @@
 
 ### 安装基础软件
 
-以 yum系发行版为例。
+- 以 yum系发行版为例。
 
 ```shell
 sudo yum install -y git gcc make perl
 ```
 
-以 apt系发行版为例。
+- 以 apt系发行版为例。
 
 ```shell
 sudo apt-get update
@@ -188,7 +188,7 @@ make -j$(nproc)
     taskset -c 10 test/rsa4096_private_rsaz29_x8_bench 200 all
     ```
 
-详细的源码获取、OpenSSL构建、优化代码接入和基础验证操作，请参见[快速入门](./docs/zh/quick_start.md)。
+更详细的源码获取、OpenSSL构建、优化代码接入和基础验证操作，请参见[快速入门](./docs/zh/quick_start.md)。
 
 ## 使用说明
 
@@ -234,7 +234,7 @@ taskset -c 10 test/rsa4096_private_rsaz29_x8_bench 200 all
 | [安装指南](./docs/zh/installation_guide.md) | 描述环境要求、三算法接入步骤、编译步骤和测试步骤。 |
 | [用户指南](./docs/zh/user_guide.md) | 描述AES-XTS、AES-GCM和RSA优化的使用入口、参数和验证方法。 |
 | [版本说明书](./docs/zh/release_notes.md) | 描述版本配套、能力范围、注意事项和遗留问题。 |
-| [文档许可证](./docs/LICENSE) | 说明文档许可证。 |
+| [文档许可证](./docs/LICENSE) | 文档许可证。 |
 
 ## License
 
