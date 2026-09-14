@@ -52,7 +52,7 @@
 ## 版本使用注意事项
 
 - AES-XTS当前热路径按SVE vector length为256bit的机器调优，非256bit VL机器需要单独验证。
-- AES-GCM只在8192B及以上大窗口进入SVE2路径，小包按设计保留ARMv8/NEON路径。
+- AES-GCM只在8192Byte及以上大窗口进入SVE2路径，小包按设计保留ARMv8/NEON路径。
 - AES-GCM provider上下文中会缓存`pairtab[1024]`，用于降低大块请求中的GHASH预计算重复开销。
 - RSA当前以独立benchmark方式验证RSA2048/RSA4096 private CRT数学运算，不是OpenSSL对外RSA API的透明分发。
 - 接入脚本通过源码锚点修改OpenSSL文件，目标OpenSSL版本差异较大时可能需要调整锚点。
@@ -63,7 +63,7 @@
 
 **新增特性**
 
-| 模块 | 更新说明 |
+| 特性 | 更新说明 |
 | --- | --- |
 | AES-XTS | 新增AArch64 SVE2 AES-XTS stream实现，覆盖AES-128/192/256 XTS加解密。 |
 | AES-GCM | 新增SVE2 AES-CTR + GHASH大窗口融合计算路径，支持AES-128/192/256 GCM加解密。 |
@@ -71,7 +71,7 @@
 
 **修改特性**
 
-| 模块 | 更新说明 |
+| 特性 | 更新说明 |
 | --- | --- |
 | AES-GCM | SVE2 GCM API改为消费预计算`pairtab`，并在provider context中管理缓存生命周期。 |
 | AES-GCM | 增加AES-128/AES-256 decrypt 16KB级预取kernel选择。 |

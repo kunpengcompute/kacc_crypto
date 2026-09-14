@@ -90,12 +90,10 @@
 
 | 项目 | 说明 |
 | --- | --- |
-| 产品名称 | KACC_Crypto |
-| 分支 | dev |
-| 软件形态 | OpenSSL密码算法优化源码、接入脚本和测试脚本 |
-| 覆盖算法 | AES-XTS、AES-GCM、RSA |
-| 目标平台 | 鲲鹏950处理器AArch64 Linux |
-| OpenSSL版本 | 建议OpenSSL 3.0系列或与接入脚本锚点匹配的源码树 |
+| 产品名称 | 鲲鹏BoostKit |
+| 产品版本 | 26.2.RC1 |
+| 软件名称 | KACC_Crypto |
+| 软件版本 | V1.1.0 |
 
 详细版本能力、注意事项和遗留问题请参见《[版本说明书](./docs/zh/release_notes.md)》。
 
@@ -103,7 +101,7 @@
 
 ### 环境要求
 
-部署前请确保环境满足[**表 4** 环境要求](#环境要求表)。
+部署前请确保环境满足[表 4 环境要求](#环境要求表)。
 
 **表 4** 环境要求<a id="环境要求表"></a>
 
@@ -113,8 +111,9 @@
 | 架构 | AArch64 |
 | 操作系统 | AArch64 Linux |
 | 指令能力 | ARMv8 AES、PMULL、SVE2 |
-| 编译器 | 支持AArch64 SVE2相关`-march`选项的GCC或Clang |
-| 构建工具 | `git`、`gcc`或`clang`、`make`、`perl` |
+| 编译器 | 支持AArch64 SVE2相关-march选项的GCC或Clang |
+| 构建工具 | git、gcc或clang、make、perl |
+| OpenSSL版本 | 建议OpenSSL 3.0系列或与接入脚本锚点匹配的源码树 |
 
 ### 安装基础软件
 
