@@ -139,7 +139,7 @@ make -j$(nproc)
 
 ### 功能说明
 
-AES-GCM优化在OpenSSL GCM大块路径中增加SVE2 AES-CTR与GHASH融合计算路径。输入长度达到8192B、平台支持AES/PMULL/SVE2且当前上下文使用ARMv8 GCM汇编时进入SVE2；小包、尾部和不满足能力条件的场景继续使用ARMv8/NEON路径。
+AES-GCM优化在OpenSSL GCM大块路径中增加SVE2 AES-CTR与GHASH融合计算路径。输入长度达到8192Byte、平台支持AES/PMULL/SVE2且当前上下文使用ARMv8 GCM汇编时进入SVE2；小包、尾部和不满足能力条件的场景继续使用ARMv8/NEON路径。
 
 ### 接入优化代码
 
