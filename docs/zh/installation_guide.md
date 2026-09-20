@@ -32,13 +32,13 @@
 
 ### 安装依赖
 
-- yum系发行版
+- yum系发行版。
 
   ```bash
   sudo yum install -y git gcc make perl
   ```
 
-- apt系发行版
+- apt系发行版。
 
   ```bash
   sudo apt-get update
@@ -139,7 +139,7 @@ make -j$(nproc)
 
 ### 功能说明
 
-AES-GCM优化在OpenSSL GCM大块路径中增加SVE2 AES-CTR与GHASH融合计算路径。输入长度达到8192B、平台支持AES/PMULL/SVE2且当前上下文使用ARMv8 GCM汇编时进入SVE2；小包、尾部和不满足能力条件的场景继续使用ARMv8/NEON路径。
+AES-GCM优化在OpenSSL GCM大块路径中增加SVE2 AES-CTR与GHASH融合计算路径。输入长度达到8192Byte、平台支持AES/PMULL/SVE2且当前上下文使用ARMv8 GCM汇编时进入SVE2；小包、尾部和不满足能力条件的场景继续使用ARMv8/NEON路径。
 
 ### 接入优化代码
 
@@ -218,7 +218,7 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
 
 ### 编译并运行
 
-- 编译并运行RSA2048 benchmark
+- 编译并运行RSA2048 benchmark。
 
   ```bash
   cd /path/to/kacc_crypto
@@ -226,7 +226,7 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.sh
   ```
 
-- 编译并运行RSA4096 benchmark
+- 编译并运行RSA4096 benchmark。
 
   ```bash
   cd /path/to/kacc_crypto

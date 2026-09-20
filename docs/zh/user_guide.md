@@ -47,7 +47,7 @@ AES-GCM优化接入OpenSSL provider AES-GCM大块update路径。应用仍通过`
 | 架构 | AArch64 |
 | 指令能力 | ARMv8 AES、PMULL、SVE2 |
 | 算法 | AES-128-GCM、AES-192-GCM、AES-256-GCM |
-| 长度阈值 | 加密和解密均为8192B |
+| 长度阈值 | 加密和解密均为8192Byte |
 | 上下文要求 | 当前GCM context使用ARMv8 AES/GHASH汇编 |
 | 回退路径 | 小包、尾部、不满足能力条件或kernel不支持时使用ARMv8/NEON GCM |
 

@@ -12,7 +12,7 @@
 
 `KACC_Crypto`是面向鲲鹏950处理器AArch64平台的OpenSSL密码算法优化源码仓库，当前包含AES-XTS、AES-GCM和RSA三类优化代码、源码接入脚本以及功能/性能验证脚本。
 
-本仓库当前不提供独立运行时库。AES-XTS和AES-GCM优化通过源码接入方式集成到目标OpenSSL源码树。重新编译OpenSS后，业务应用仍通过OpenSSL EVP/provider接口调用对应算法。RSA优化当前通过独立benchmark可执行文件验证8路多缓冲private CRT路径。
+本仓库当前不提供独立运行时库。AES-XTS和AES-GCM优化通过源码接入方式集成到目标OpenSSL源码树。重新编译OpenSSL后，业务应用仍通过OpenSSL EVP/provider接口调用对应算法。RSA优化当前通过独立benchmark可执行文件验证8路多缓冲private CRT路径。
 
 `KACC_Crypto`适用于OpenSSL密码算法优化验证、SVE2指令路径评估、上游化补丁开发和性能基线对比等场景。
 
@@ -48,7 +48,7 @@
 | 算法 | 支持规格 | 优化方式 | 调用方式 | 说明 |
 | --- | --- | --- | --- | --- |
 | AES-XTS | AES-128-XTS、AES-192-XTS、AES-256-XTS加密和解密 | SVE2 AES指令实现XTS stream热路径 | OpenSSL EVP/provider AES-XTS | 不满足能力条件或不适合SVE2的输入继续使用OpenSSL开源路径。 |
-| AES-GCM | AES-128-GCM、AES-192-GCM、AES-256-GCM加密和解密 | SVE2 AES-CTR与GHASH大窗口融合 | OpenSSL EVP/provider AES-GCM | 默认8192B及以上进入SVE2路径，小包和尾部保留ARMv8/NEON路径。 |
+| AES-GCM | AES-128-GCM、AES-192-GCM、AES-256-GCM加密和解密 | SVE2 AES-CTR与GHASH大窗口融合 | OpenSSL EVP/provider AES-GCM | 默认8192Byte及以上进入SVE2路径，小包和尾部保留ARMv8/NEON路径。 |
 | RSA | RSA2048、RSA4096 private CRT benchmark | SVE2 x8 Montgomery多缓冲计算 | 独立benchmark可执行文件 | 当前不是OpenSSL对外RSA API的透明分发。 |
 
 >![](./docs/zh/public_sys-resources/icon-note.gif) **说明：**
@@ -90,12 +90,10 @@
 
 | 项目 | 说明 |
 | --- | --- |
-| 产品名称 | KACC_Crypto |
-| 分支 | dev |
-| 软件形态 | OpenSSL密码算法优化源码、接入脚本和测试脚本 |
-| 覆盖算法 | AES-XTS、AES-GCM、RSA |
-| 目标平台 | 鲲鹏950处理器AArch64 Linux |
-| OpenSSL版本 | 建议OpenSSL 3.0系列或与接入脚本锚点匹配的源码树 |
+| 产品名称 | 鲲鹏BoostKit |
+| 产品版本 | 26.2.RC1 |
+| 软件名称 | KACC_Crypto |
+| 软件版本 | V1.1.0 |
 
 详细版本能力、注意事项和遗留问题请参见《[版本说明书](./docs/zh/release_notes.md)》。
 
@@ -103,7 +101,7 @@
 
 ### 环境要求
 
-部署前请确保环境满足[**表 4** 环境要求](#环境要求表)。
+部署前请确保环境满足[表 4 环境要求](#环境要求表)。
 
 **表 4** 环境要求<a id="环境要求表"></a>
 
@@ -113,8 +111,9 @@
 | 架构 | AArch64 |
 | 操作系统 | AArch64 Linux |
 | 指令能力 | ARMv8 AES、PMULL、SVE2 |
-| 编译器 | 支持AArch64 SVE2相关`-march`选项的GCC或Clang |
-| 构建工具 | `git`、`gcc`或`clang`、`make`、`perl` |
+| 编译器 | 支持AArch64 SVE2相关-march选项的GCC或Clang |
+| 构建工具 | git、gcc或clang、make、perl |
+| OpenSSL版本 | 建议OpenSSL 3.0系列或与接入脚本锚点匹配的源码树 |
 
 ### 安装基础软件
 
