@@ -136,7 +136,7 @@ cd kacc_crypto
    git status --porcelain --untracked-files=all --ignored
    ```
 
-新克隆的仓库应无输出；如有输出，请核查对应文件是否为预期修改或生成文件。
+   新克隆的仓库应无输出；如有输出，请核查对应文件是否为预期修改或生成文件。
 
 >![](./docs/zh/public_sys-resources/icon-note.gif) **说明：**
 >
