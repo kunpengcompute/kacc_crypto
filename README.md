@@ -116,25 +116,25 @@ cd kacc_crypto
 
 1. 检查Git对象数据库的完整性。
 
-```shell
-git fsck --full
-```
+   ```shell
+   git fsck --full
+   ```
 
 命令退出状态为0且没有对象损坏或缺失错误，表示Git对象完整性检查通过。`dangling`提示表示存在未被引用的对象，本身不代表对象损坏。
 
 2. 查看当前源码的完整提交编号。
 
-```shell
-git rev-parse HEAD
-```
+   ```shell
+   git rev-parse HEAD
+   ```
 
 将输出与可信渠道确认的目标提交编号核对。`dev`分支会持续更新，交付和复现时应记录完整提交编号。
 
 3. 在编译或接入优化源码之前，检查工作区和暂存区是否有修改或额外文件。
 
-```shell
-git status --porcelain --untracked-files=all --ignored
-```
+   ```shell
+   git status --porcelain --untracked-files=all --ignored
+   ```
 
 新克隆的仓库应无输出；如有输出，请核查对应文件是否为预期修改或生成文件。
 
