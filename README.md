@@ -105,7 +105,7 @@
 
 ### 获取源码
 
-从本文使用的仓库地址获取`dev`分支：
+从本文使用的仓库地址获取`dev`分支。
 
 ```shell
 git clone --branch dev https://gitcode.com/weiaq/kacc_crypto.git
@@ -114,7 +114,7 @@ cd kacc_crypto
 
 ### 校验步骤
 
-1. 检查Git对象数据库的完整性：
+1. 检查Git对象数据库的完整性。
 
 ```shell
 git fsck --full
@@ -122,7 +122,7 @@ git fsck --full
 
 命令退出状态为0且没有对象损坏或缺失错误，表示Git对象完整性检查通过。`dangling`提示表示存在未被引用的对象，本身不代表对象损坏。
 
-2. 查看当前源码的完整提交编号：
+2. 查看当前源码的完整提交编号。
 
 ```shell
 git rev-parse HEAD
@@ -130,7 +130,7 @@ git rev-parse HEAD
 
 将输出与可信渠道确认的目标提交编号核对。`dev`分支会持续更新，交付和复现时应记录完整提交编号。
 
-3. 在编译或接入优化源码之前，检查工作区和暂存区是否有修改或额外文件：
+3. 在编译或接入优化源码之前，检查工作区和暂存区是否有修改或额外文件。
 
 ```shell
 git status --porcelain --untracked-files=all --ignored
