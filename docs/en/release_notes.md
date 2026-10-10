@@ -1,7 +1,5 @@
 # Release Notes
 
-<!-- md-trans-meta sourceCommit=0ec0da89a39ac267eb2a0479fa4844cc52cc6637 translatedAt=2026-09-02T03:39:13.076Z pushedAt=2026-09-03T00:40:29.440Z -->
-
 ## Version Requirements
 
 ### Product Versions

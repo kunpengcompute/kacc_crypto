@@ -1,7 +1,5 @@
 # Installation Guide
 
-<!-- md-trans-meta sourceCommit=cf44427b349a15f3e2de14446543026ddc946f03 translatedAt=2026-09-01T09:06:04.123Z pushedAt=2026-09-03T00:40:42.578Z -->
-
 ## Environment Setup
 
 ### Environment Requirements
@@ -123,7 +121,7 @@ make -j$(nproc)
 
 ### Testing Functionality and Performance
 
-1. Run the following command:
+1. Run the following command.
 
    ```bash
    cd /path/to/kacc_crypto
@@ -266,6 +264,6 @@ KACC_Crypto currently does not provide an automatic uninstallation script. To re
 
 ## Change History
 
-| Issue | Date | Description |
+| Version | Date | Description |
 | ---- | ---- | -- |
 | 01 | 2026-09-30 | This is the first official release. |

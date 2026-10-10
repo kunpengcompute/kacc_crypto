@@ -1,7 +1,5 @@
 # User Guide
 
-<!-- md-trans-meta sourceCommit=cf44427b349a15f3e2de14446543026ddc946f03 translatedAt=2026-09-02T02:31:12.054Z pushedAt=2026-09-03T00:40:34.416Z -->
-
 This document describes how to use KACC_Crypto after installation. Before you begin, complete the OpenSSL build, optimized code integration, and basic verification steps described in [Installation Guide](./installation_guide.md).
 
 ## Using AES-XTS Optimization
@@ -134,6 +132,6 @@ The RSA optimization is currently verified through an independent benchmark, rat
 
 ## Change History
 
-| Issue | Date | Description |
+| Version | Date | Description |
 | ---- | ---- | -- |
 | 01 | 2026-09-30 | This is the first official release. |
