@@ -1,4 +1,4 @@
-- [project Introduction](./../../README_en.md)
+- [Project Introduction](./../../README_en.md)
 - [Release Note](./release_notes.md)
 - [Installation Guide](./installation_guide.md)
 - [Quick Start](./quick_start.md)
