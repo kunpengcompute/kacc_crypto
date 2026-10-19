@@ -1,5 +1,7 @@
 # Installation Guide
 
+<!-- md-trans-meta sourceCommit=72e958ee82d46254880d491bd836a042180800d8 translatedAt=2026-10-14T02:42:41.175Z pushedAt=2026-10-14T06:25:33.160Z -->
+
 ## Environment Setup
 
 ### Environment Requirements
@@ -24,7 +26,7 @@ Before installation, check that the environment meets the current support scope 
 | Compiler | GCC or Clang that supports AArch64 SVE2-related `-march` options |
 | Build tool | Git, GCC, make, perl |
 
-> ![icon note](public_sys-resources/icon-note.gif) **Note:**
+> ![icon note](public_sys-resources/icon-note.gif) **NOTE**
 >
 >- The AES-GCM and AES-XTS optimizations depend on AArch64 SVE2 capabilities. When the capability condition is not met, fall back to the original OpenSSL path.
 >- The RSA benchmark uses SVE2 assembly and links the OpenSSL `libcrypto` library, supporting both `libcrypto.a` and `libcrypto.so`.

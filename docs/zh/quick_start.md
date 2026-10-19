@@ -113,9 +113,9 @@ OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
 
 ## 学习文档
 
-- 如需了解完整环境要求、接入过程和测试命令，请参见[安装指南](./installation_guide.md)。
-- 如需了解安装后的调用方式，请参见[用户指南](./user_guide.md)。
-- 如需了解版本能力、约束和已知问题，请参见[版本说明书](./release_notes.md)。
+- 如需了解完整环境要求、接入过程和测试命令，请参见《[安装指南](./installation_guide.md)》。
+- 如需了解安装后的调用方式，请参见《[用户指南](./user_guide.md)》。
+- 如需了解版本能力、约束和已知问题，请参见《[版本说明书](./release_notes.md)》。
 
 ## 修订记录
 

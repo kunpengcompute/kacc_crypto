@@ -238,13 +238,13 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| RSA_BENCH_BITS | RSA key size，支持`2048`和`4096` | `2048` |
-| RSA_BENCH_ITERS | benchmark迭代次数 | `1000` |
-| RSA_BENCH_CORE | 使用`taskset`绑定CPU core | 未绑定 |
-| RSA_BENCH_MODE | `all`、`native_default`、`native_no_blind`、`rsaz29_math`、`rsaz29_blind` | `all` |
-| RSA_BENCH_LINK | `auto`、`static`、`shared`，控制链接OpenSSL静态库或动态库 | `auto` |
-| OPENSSL_LIB | 显式指定`libcrypto.a`或`libcrypto.so`路径 | 未指定 |
-| CC | benchmark编译器 | `cc` |
+| RSA_BENCH_BITS | RSA key size，支持2048和4096 | 2048 |
+| RSA_BENCH_ITERS | benchmark迭代次数 | 1000 |
+| RSA_BENCH_CORE | 使用taskset绑定CPU core | 未绑定 |
+| RSA_BENCH_MODE | all、native_default、native_no_blind、rsaz29_math、rsaz29_blind | all |
+| RSA_BENCH_LINK | auto、static、shared，控制链接OpenSSL静态库或动态库 | auto |
+| OPENSSL_LIB | 显式指定libcrypto.a或libcrypto.so路径 | 未指定 |
+| CC | benchmark编译器 | cc |
 
 ## 安装后检查
 
@@ -252,9 +252,9 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
 
 | 检查项 | 成功标准 |
 | --- | --- |
-| OpenSSL编译 | `make`成功结束，无新增编译错误。 |
-| AES-XTS正确性 | 输出包含AES-128/192/256 XTS加解密`PASS`。 |
-| AES-GCM正确性 | `run_gcm_unit_bench.sh --verify-only`成功结束。 |
+| OpenSSL编译 | make成功结束，无新增编译错误。 |
+| AES-XTS正确性 | 输出包含AES-128/192/256 XTS加解密PASS。 |
+| AES-GCM正确性 | run_gcm_unit_bench.sh --verify-only成功结束。 |
 | RSA正确性 | benchmark输出与native或原始message对比通过。 |
 | 性能测试 | 输出GB/s或ns/op数据，可与开源路径对比。 |
 

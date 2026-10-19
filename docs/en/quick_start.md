@@ -1,5 +1,7 @@
 # Quick Start
 
+<!-- md-trans-meta sourceCommit=cf44427b349a15f3e2de14446543026ddc946f03 translatedAt=2026-10-14T02:42:40.615Z pushedAt=2026-10-14T06:45:03.831Z -->
+
 ## Introduction to KACC_Crypto
 
 KACC_Crypto is a cryptographic algorithm optimization library implemented based on OpenSSL. It currently includes three types of optimized code for AES-GCM, AES-XTS, and RSA. AES-GCM and AES-XTS use AArch64 SVE2 instructions to improve the large-block processing capability of symmetric cryptography, while RSA uses an 8-way multi-buffer approach to optimize the Montgomery modular exponentiation hot path in private-key CRT operations.
