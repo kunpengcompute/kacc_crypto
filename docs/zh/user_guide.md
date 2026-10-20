@@ -84,13 +84,13 @@ RSA优化当前通过独立benchmark验证，不是OpenSSL对外RSA API的透明
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| RSA_BENCH_BITS | RSA key size，支持`2048`和`4096` | `2048` |
-| RSA_BENCH_ITERS | benchmark迭代次数 | `1000` |
-| RSA_BENCH_CORE | 绑定CPU core；设置后通过`taskset`执行 | 未绑定 |
-| RSA_BENCH_MODE | `all`、`native_default`、`native_no_blind`、`rsaz29_math`、`rsaz29_blind` | `all` |
-| RSA_BENCH_LINK | `auto`、`static`、`shared`，控制链接OpenSSL静态库或动态库 | `auto` |
-| OPENSSL_LIB | 显式指定`libcrypto.a`或`libcrypto.so`路径 | 未指定 |
-| CC | 编译benchmark使用的编译器 | `cc` |
+| RSA_BENCH_BITS | RSA key size，支持2048和4096 | 2048 |
+| RSA_BENCH_ITERS | benchmark迭代次数 | 1000 |
+| RSA_BENCH_CORE | 绑定CPU core；设置后通过taskset执行 | 未绑定 |
+| RSA_BENCH_MODE | all、native_default、native_no_blind、rsaz29_math、rsaz29_blind | all |
+| RSA_BENCH_LINK | auto、static、shared，控制链接OpenSSL静态库或动态库 | auto |
+| OPENSSL_LIB | 显式指定libcrypto.a或libcrypto.so路径 | 未指定 |
+| CC | 编译benchmark使用的编译器 | cc |
 
 ### 使用示例
 
@@ -120,9 +120,9 @@ RSA优化当前通过独立benchmark验证，不是OpenSSL对外RSA API的透明
 
 | 算法 | 推荐验证方式 | 成功标准 |
 | --- | --- | --- |
-| AES-XTS | `apply_and_test_xts.sh` | 正确性输出`PASS`，性能输出包含native与SVE2对比。 |
-| AES-GCM | `run_gcm_unit_bench.sh --verify-only`和`run_all_gcm_tests.sh` | 正确性通过，性能矩阵输出NEON/SVE2 GB/s。 |
-| RSA | `apply_and_test_rsa.sh` | SVE2结果与native或原始message一致，输出ns/op。 |
+| AES-XTS | apply_and_test_xts.sh | 正确性输出PASS，性能输出包含native与SVE2对比。 |
+| AES-GCM | run_gcm_unit_bench.sh --verify-only和run_all_gcm_tests.sh | 正确性通过，性能矩阵输出NEON/SVE2 GB/s。 |
+| RSA | apply_and_test_rsa.sh | SVE2结果与native或原始message一致，输出ns/op。 |
 
 ## 特殊说明
 

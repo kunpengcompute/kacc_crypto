@@ -1,5 +1,7 @@
 # User Guide
 
+<!-- md-trans-meta sourceCommit=72e958ee82d46254880d491bd836a042180800d8 translatedAt=2026-10-14T02:44:02.882Z pushedAt=2026-10-14T06:42:41.237Z -->
+
 This document describes how to use KACC_Crypto after installation. Before you begin, complete the OpenSSL build, optimized code integration, and basic verification steps described in [Installation Guide](./installation_guide.md).
 
 ## Using AES-XTS Optimization

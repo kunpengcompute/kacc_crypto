@@ -1,6 +1,6 @@
 # KACC_Crypto鲲鹏密码算法优化介绍
 
-简体中文|[English]
+简体中文|[English](./README_en.md)
 
 ## 最新消息
 
@@ -51,7 +51,7 @@
 | AES-GCM | AES-128-GCM、AES-192-GCM、AES-256-GCM加密和解密 | SVE2 AES-CTR与GHASH大窗口融合 | OpenSSL EVP/provider AES-GCM | 默认8192Byte及以上进入SVE2路径，小包和尾部保留ARMv8/NEON路径。 |
 | RSA | RSA2048、RSA4096 private CRT benchmark | SVE2 x8 Montgomery多缓冲计算 | 独立benchmark可执行文件 | 当前不是OpenSSL对外RSA API的透明分发。 |
 
->![](./docs/zh/public_sys-resources/icon-note.gif) **说明：**
+>![表示说明的图片](./docs/zh/public_sys-resources/icon-note.gif) **说明：**
 >
 >- AES-XTS当前热路径按SVE vector length为256bit的机器调优，其他VL需要单独验证。
 >- AES-GCM需要目标机器支持ARMv8 AES、PMULL和SVE2。
@@ -125,7 +125,7 @@ cd kacc_crypto
    ```shell
    git rev-parse HEAD
    ```
- 
+
    将输出与可信渠道确认的目标提交编号核对。`dev`分支会持续更新，交付和复现时应记录完整提交编号。
 
 3. 在编译或接入优化源码之前，检查工作区和暂存区是否有修改或额外文件。
@@ -136,7 +136,7 @@ cd kacc_crypto
 
    新克隆的仓库应无输出；如有输出，请核查对应文件是否为预期修改或生成文件。
 
->![](./docs/zh/public_sys-resources/icon-note.gif) **说明：**
+>![表示说明的图片](./docs/zh/public_sys-resources/icon-note.gif) **说明：**
 >
 >Git对象完整性检查不能单独证明发布者身份，也不等同于数字签名验证。源码地址和用于核对的目标提交编号仍需通过可信渠道确认。
 
@@ -158,7 +158,7 @@ cd kacc_crypto
 
 ### 环境要求
 
-部署前请确保环境满足[表 4 环境要求](#环境要求表)。
+部署前请确保环境满足[**表 4** 环境要求](#环境要求表)。
 
 **表 4** 环境要求<a id="环境要求表"></a>
 
@@ -286,15 +286,15 @@ taskset -c 10 test/rsa4096_private_rsaz29_x8_bench 200 all
 
 | 学习文档名称 | 学习资源简介 |
 | --- | --- |
-| [快速入门](./docs/zh/quick_start.md) | 快速完成源码获取、OpenSSL构建、优化代码接入和基础验证。 |
-| [安装指南](./docs/zh/installation_guide.md) | 描述环境要求、三算法接入步骤、编译步骤和测试步骤。 |
-| [用户指南](./docs/zh/user_guide.md) | 描述AES-XTS、AES-GCM和RSA优化的使用入口、参数和验证方法。 |
-| [版本说明书](./docs/zh/release_notes.md) | 描述版本配套、能力范围、注意事项和遗留问题。 |
-| [文档许可证](./docs/LICENSE) | 文档许可证。 |
+| 《[快速入门](./docs/zh/quick_start.md)》 | 快速完成源码获取、OpenSSL构建、优化代码接入和基础验证。 |
+| 《[安装指南](./docs/zh/installation_guide.md)》 | 描述环境要求、三算法接入步骤、编译步骤和测试步骤。 |
+| 《[用户指南](./docs/zh/user_guide.md)》 | 描述AES-XTS、AES-GCM和RSA优化的使用入口、参数和验证方法。 |
+| 《[版本说明书](./docs/zh/release_notes.md)》 | 描述版本配套、能力范围、注意事项和遗留问题。 |
+| 《[文档许可证](./docs/LICENSE)》 | 文档许可证。 |
 
 ## License
 
-文档许可证详见 [docs/LICENSE](./docs/LICENSE)。源码许可证如需单独声明，请以后续新增的仓库根目录许可证文件为准。
+文档许可证详见[LICENSE](./docs/LICENSE)文件。源码许可证如需单独声明，请以后续新增的仓库根目录许可证文件为准。
 
 ## 贡献声明
 

@@ -44,7 +44,7 @@
 | --- | --- | --- |
 | V1.1.0 | AArch64 Linux | OpenSSL 3.0.16源码树、GCC/Clang、make、perl |
 
-> ![icon note](public_sys-resources/icon-note.gif) **说明：**
+> ![表示说明的图片](public_sys-resources/icon-note.gif) **说明：**
 >
 >- 具体可用范围以接入脚本能否匹配目标OpenSSL源码锚点、以及目标机器是否支持对应指令能力为准。
 >- 未列入本表的OpenSSL版本和操作系统需要单独验证。
