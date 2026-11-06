@@ -1,6 +1,6 @@
 # Quick Start
 
-<!-- md-trans-meta sourceCommit=cf44427b349a15f3e2de14446543026ddc946f03 translatedAt=2026-09-02T00:54:08.061Z pushedAt=2026-09-03T00:40:38.556Z -->
+<!-- md-trans-meta sourceCommit=cf44427b349a15f3e2de14446543026ddc946f03 translatedAt=2026-10-14T02:42:40.615Z pushedAt=2026-10-14T06:45:03.831Z -->
 
 ## Introduction to KACC_Crypto
 
@@ -121,6 +121,6 @@ The test covers the encryption and decryption paths of AES-128-XTS, AES-192-XTS,
 
 ## Change History
 
-| Issue | Date | Description |
+| Version | Date | Description |
 | -- | ---- | ---- |
 | 01 | 2026-09-30 | This is the first official release. |

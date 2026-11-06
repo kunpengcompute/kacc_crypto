@@ -1,6 +1,6 @@
 # Installation Guide
 
-<!-- md-trans-meta sourceCommit=cf44427b349a15f3e2de14446543026ddc946f03 translatedAt=2026-09-01T09:06:04.123Z pushedAt=2026-09-03T00:40:42.578Z -->
+<!-- md-trans-meta sourceCommit=72e958ee82d46254880d491bd836a042180800d8 translatedAt=2026-10-14T02:42:41.175Z pushedAt=2026-10-14T06:25:33.160Z -->
 
 ## Environment Setup
 
@@ -26,7 +26,7 @@ Before installation, check that the environment meets the current support scope 
 | Compiler | GCC or Clang that supports AArch64 SVE2-related `-march` options |
 | Build tool | Git, GCC, make, perl |
 
-> ![icon note](public_sys-resources/icon-note.gif) **Note:**
+> ![icon note](public_sys-resources/icon-note.gif) **NOTE**
 >
 >- The AES-GCM and AES-XTS optimizations depend on AArch64 SVE2 capabilities. When the capability condition is not met, fall back to the original OpenSSL path.
 >- The RSA benchmark uses SVE2 assembly and links the OpenSSL `libcrypto` library, supporting both `libcrypto.a` and `libcrypto.so`.
@@ -123,7 +123,7 @@ make -j$(nproc)
 
 ### Testing Functionality and Performance
 
-1. Run the following command:
+1. Run the following command.
 
    ```bash
    cd /path/to/kacc_crypto
@@ -266,6 +266,6 @@ KACC_Crypto currently does not provide an automatic uninstallation script. To re
 
 ## Change History
 
-| Issue | Date | Description |
+| Version | Date | Description |
 | ---- | ---- | -- |
 | 01 | 2026-09-30 | This is the first official release. |

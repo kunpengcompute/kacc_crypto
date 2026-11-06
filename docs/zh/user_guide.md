@@ -2,6 +2,12 @@
 
 本文档介绍KACC_Crypto安装完成后的使用方法。开始使用前，请先完成《[安装指南](./installation_guide.md)》中的OpenSSL构建、优化代码接入和基础验证步骤。
 
+## 特殊说明
+
+- KACC_Crypto当前面向优化代码验证和上游化开发，不提供独立运行时库。
+- 接入脚本会修改目标OpenSSL源码树，建议在干净OpenSSL工作树中执行。
+- 性能测试前建议固定CPU频率、绑定CPU core，并确认目标机器实际支持SVE2。
+
 ## 使用AES-XTS优化
 
 ### 调用方式
@@ -84,13 +90,13 @@ RSA优化当前通过独立benchmark验证，不是OpenSSL对外RSA API的透明
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| RSA_BENCH_BITS | RSA key size，支持`2048`和`4096` | `2048` |
-| RSA_BENCH_ITERS | benchmark迭代次数 | `1000` |
-| RSA_BENCH_CORE | 绑定CPU core；设置后通过`taskset`执行 | 未绑定 |
-| RSA_BENCH_MODE | `all`、`native_default`、`native_no_blind`、`rsaz29_math`、`rsaz29_blind` | `all` |
-| RSA_BENCH_LINK | `auto`、`static`、`shared`，控制链接OpenSSL静态库或动态库 | `auto` |
-| OPENSSL_LIB | 显式指定`libcrypto.a`或`libcrypto.so`路径 | 未指定 |
-| CC | 编译benchmark使用的编译器 | `cc` |
+| RSA_BENCH_BITS | RSA key size，支持2048和4096 | 2048 |
+| RSA_BENCH_ITERS | benchmark迭代次数 | 1000 |
+| RSA_BENCH_CORE | 绑定CPU core；设置后通过taskset执行 | 未绑定 |
+| RSA_BENCH_MODE | all、native_default、native_no_blind、rsaz29_math、rsaz29_blind | all |
+| RSA_BENCH_LINK | auto、static、shared，控制链接OpenSSL静态库或动态库 | auto |
+| OPENSSL_LIB | 显式指定libcrypto.a或libcrypto.so路径 | 未指定 |
+| CC | 编译benchmark使用的编译器 | cc |
 
 ### 使用示例
 
@@ -120,15 +126,9 @@ RSA优化当前通过独立benchmark验证，不是OpenSSL对外RSA API的透明
 
 | 算法 | 推荐验证方式 | 成功标准 |
 | --- | --- | --- |
-| AES-XTS | `apply_and_test_xts.sh` | 正确性输出`PASS`，性能输出包含native与SVE2对比。 |
-| AES-GCM | `run_gcm_unit_bench.sh --verify-only`和`run_all_gcm_tests.sh` | 正确性通过，性能矩阵输出NEON/SVE2 GB/s。 |
-| RSA | `apply_and_test_rsa.sh` | SVE2结果与native或原始message一致，输出ns/op。 |
-
-## 特殊说明
-
-- KACC_Crypto当前面向优化代码验证和上游化开发，不提供独立运行时库。
-- 接入脚本会修改目标OpenSSL源码树，建议在干净OpenSSL工作树中执行。
-- 性能测试前建议固定CPU频率、绑定CPU core，并确认目标机器实际支持SVE2。
+| AES-XTS | apply_and_test_xts.sh | 正确性输出PASS，性能输出包含native与SVE2对比。 |
+| AES-GCM | run_gcm_unit_bench.sh --verify-only和run_all_gcm_tests.sh | 正确性通过，性能矩阵输出NEON/SVE2 GB/s。 |
+| RSA | apply_and_test_rsa.sh | SVE2结果与native或原始message一致，输出ns/op。 |
 
 ## 修订记录
 

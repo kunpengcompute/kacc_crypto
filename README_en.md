@@ -1,5 +1,7 @@
 # KACC_Crypto Cryptographic Algorithm Optimization
 
+<!-- md-trans-meta sourceCommit=cf73184a642f81f4ecba1b9d708eaa57c3b314fd translatedAt=2026-10-14T02:43:16.691Z pushedAt=2026-10-14T06:18:46.230Z -->
+
 English|[简体中文](./README.md)
 
 ## What's New
@@ -51,7 +53,7 @@ This repository does not currently provide a standalone runtime library. The AES
 | AES-GCM | AES-128-GCM, AES-192-GCM, and AES-256-GCM encryption and decryption | SVE2 AES-CTR and GHASH fusion with large window | OpenSSL EVP/provider AES-GCM | By default, the SVE2 path is used for input lengths of 8,192 bytes and more, while the Armv8/NEON path continues to be used for small packets and tail data. |
 | RSA | RSA2048 and RSA4096 private CRT benchmark | SVE2 x8 Montgomery multi-buffer computation | Standalone benchmark executable | Currently, it is not a transparent dispatch through OpenSSL's public RSA API. |
 
->![](./docs/en/public_sys-resources/icon-note.gif) **Note:**
+>![note](./docs/en/public_sys-resources/icon-note.gif) **NOTE**
 >
 >- The AES-XTS hot path is currently tuned for machines with an SVE vector length of 256 bits. Machines with other vector lengths require separate verification.
 >- AES-GCM requires the target machine to support Armv8 AES, PMULL, and SVE2.
@@ -92,7 +94,7 @@ The project directory hierarchy is described as follows:
 
 ## Release Notes
 
-[**Table 3** Version Information](#version-information) describes the current version information.
+[**Table 3** Version information](#version-information) describes the current version information.
 
 **Table 3** Version information<a id="version-information"></a>
 
@@ -104,6 +106,63 @@ The project directory hierarchy is described as follows:
 | Software version | V1.1.0 |
 
 For detailed version capabilities, precautions, and known issues, see [Release Notes](./docs/en/release_notes.md).
+
+## Software Package Integrity Verification
+
+This project currently provides source code through a Git repository, obtained via `git clone`, and does not provide a standalone software package, digital signature file, or SHA-256 checksum file. After obtaining the source code, you can check the integrity of Git objects, the source code commit version, and the working tree status.
+
+### Obtaining the Source Code
+
+Obtain the `dev` branch from the repository address used in this document.
+
+```shell
+git clone --branch dev https://gitcode.com/weiaq/kacc_crypto.git
+cd kacc_crypto
+```
+
+### Verification Steps
+
+1. Check the integrity of the Git object database.
+
+   ```shell
+   git fsck --full
+   ```
+
+   An exit status of `0` with no object corruption or missing-object errors indicates that the Git object integrity check has passed. A `dangling` prompt indicates the existence of unreferenced objects, which does not by itself indicate object corruption.
+
+2. View the full commit ID of the current source code.
+
+   ```shell
+   git rev-parse HEAD
+   ```
+
+   Compare the output with the target commit ID confirmed through a trusted channel. The `dev` branch is updated continuously, so the full commit ID should be recorded during delivery and reproduction.
+
+3. Before compiling or integrating the optimized source code, check whether there are modifications or extra files in the working tree and staging area.
+
+   ```shell
+   git status --porcelain --untracked-files=all --ignored
+   ```
+
+   A newly cloned repository should produce no output; if there is output, check whether the corresponding files are expected modifications or generated files.
+
+>![note](./docs/en/public_sys-resources/icon-note.gif) **NOTE**
+>
+>Git object integrity checks cannot independently prove publisher identity and are not equivalent to digital signature verification. The source code address and the target commit ID used for comparison still need to be confirmed through a trusted channel.
+
+### Result Evaluation
+
+| Verification Result | Evaluation and Handling |
+| --- | --- |
+| Git object check passes, the commit ID matches the trusted target, and the working tree check produces no output | The source code integrity and version check passes, and you can continue to use it. |
+| Git objects are corrupted or missing | Do not continue to use this copy; re-clone the repository. |
+| The commit ID does not match the target | Confirm the required source code version before continuing. |
+| The working tree check produces output | Check local modifications, untracked files, and ignored files, and confirm before continuing. |
+| The trusted target commit ID is not obtained | Only local object integrity can be checked; whether this is the expected delivery version cannot be confirmed. |
+
+### Exception Handling
+
+If verification fails, preserve the local modifications you need, re-clone from the trusted repository address in a new directory, and run the above checks again. If the problem persists, please submit an issue.
 
 ## Environment Setup
 
@@ -119,7 +178,7 @@ Before deployment, verify the environment based on [**Table 4** Environment requ
 | Architecture | AArch64 |
 | OS | AArch64 Linux |
 | Instruction capabilities | Armv8 AES, PMULL, and SVE2 |
-| Compiler | GCC or Clang that supports AArch64 SVE2-related -march options |
+| Compiler | GCC or Clang that supports AArch64 SVE2-related `-march` options |
 | Build tool | git, gcc or clang, make, perl |
 | OpenSSL version | Recommended: OpenSSL 3.0 series or a source tree matching the integration script anchors |
 
@@ -245,7 +304,7 @@ An output containing `correctness=PASS` indicates that the functional verificati
 
 ## License
 
-For the document license, see [docs/LICENSE](./docs/LICENSE). If the source code license needs to be declared separately, the license file in the repository root directory added later shall prevail.
+For the document license, see [LICENSE](./docs/LICENSE). If the source code license needs to be declared separately, the license file in the repository root directory added later shall prevail.
 
 ## Contribution Statement
 

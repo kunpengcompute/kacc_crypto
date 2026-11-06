@@ -15,7 +15,7 @@
 | SVE向量长度 | AES-XTS热路径按256bit向量长度优化 |
 | 加速设备 | 无外部加速卡要求 |
 
-**表 2** 软件要求
+**表 2** 操作系统与软件要求
 
 | 项目 | 说明 |
 | --- | --- |
@@ -53,8 +53,8 @@ KACC_Crypto当前提供源码接入方式：仓库保存优化相关源码、接
 
 | 安装方式 | 安装说明 | 适用场景 |
 | --- | --- | --- |
-| 源码接入 | 通过`scripts/install_*`脚本修改目标OpenSSL源码树并复制优化源码。 | 功能验证、性能验证、后续上游化开发。 |
-| 一键验证 | 通过`scripts/apply_and_test_*`脚本完成接入和测试。 | 快速回归单个算法。 |
+| 源码接入 | 通过scripts/install_*脚本修改目标OpenSSL源码树并复制优化源码。 | 功能验证、性能验证、后续上游化开发。 |
+| 一键验证 | 通过scripts/apply_and_test_*脚本完成接入和测试。 | 快速回归单个算法。 |
 
 ## 准备OpenSSL源码树
 
@@ -105,10 +105,10 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_sve2_xts_dispatch.sh
 
 | 步骤 | 修改内容 |
 | --- | --- |
-| 拷贝源码 | 安装`aesv8-armx-sve2.pl`、`aesv8-armx-sve2.h`、`sve2_unit_tests.c`、`sve2_performance_test.c`。 |
-| 修改构建 | 在`crypto/aes/build.info`中加入`aesv8-armx-sve2.S`生成和编译目标。 |
-| 修改能力声明 | 在`include/crypto/aes_platform.h`中声明SVE2 XTS内部接口和能力宏。 |
-| 修改分发 | 在`cipher_aes_xts_hw.c`中按key size设置SVE2或开源stream。 |
+| 拷贝源码 | 安装aesv8-armx-sve2.pl、aesv8-armx-sve2.h、sve2_unit_tests.c、sve2_performance_test.c。 |
+| 修改构建 | 在crypto/aes/build.info中加入aesv8-armx-sve2.S生成和编译目标。 |
+| 修改能力声明 | 在include/crypto/aes_platform.h中声明SVE2 XTS内部接口和能力宏。 |
+| 修改分发 | 在cipher_aes_xts_hw.c中按key size设置SVE2或开源stream。 |
 
 ### 编译OpenSSL
 
@@ -153,11 +153,11 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_sve2_gcm_dispatch.sh
 
 | 步骤 | 修改内容 |
 | --- | --- |
-| 拷贝源码 | 安装`gcm-sve2-armv8.c`、`ghash-sve2-armv8_64.pl`、`gcm_unit_bench.c`和GCM测试脚本。 |
-| 修改构建 | 在`crypto/modes/build.info`中加入SVE2 GCM C文件和汇编生成目标。 |
-| 修改能力声明 | 在`include/crypto/aes_platform.h`中增加GCM能力宏、阈值宏和内部接口声明。 |
-| 修改上下文 | 在`cipher_aes_gcm.h/c`中增加`pairtab`缓存并处理复制和释放。 |
-| 修改分发 | 在`cipher_aes_gcm_hw.c`中插入8192B大窗口SVE2分发。 |
+| 拷贝源码 | 安装gcm-sve2-armv8.c、ghash-sve2-armv8_64.pl、gcm_unit_bench.c和GCM测试脚本。 |
+| 修改构建 | 在crypto/modes/build.info中加入SVE2 GCM C文件和汇编生成目标。 |
+| 修改能力声明 | 在include/crypto/aes_platform.h中增加GCM能力宏、阈值宏和内部接口声明。 |
+| 修改上下文 | 在cipher_aes_gcm.h/c中增加pairtab缓存并处理复制和释放。 |
+| 修改分发 | 在cipher_aes_gcm_hw.c中插入8192B大窗口SVE2分发。 |
 
 ### 编译OpenSSL
 
@@ -213,8 +213,8 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
 
 | 步骤 | 修改内容 |
 | --- | --- |
-| 拷贝汇编 | 安装`rsaz29-sve2-x8.S`到目标OpenSSL `crypto/bn/asm`。 |
-| 拷贝测试 | 安装`rsa2048_private_rsaz29_x8_bench.c`和`rsa4096_private_rsaz29_x8_bench.c`到目标OpenSSL `test`。 |
+| 拷贝汇编 | 安装rsaz29-sve2-x8.S到目标OpenSSL crypto/bn/asm。 |
+| 拷贝测试 | 安装rsa2048_private_rsaz29_x8_bench.c和rsa4096_private_rsaz29_x8_bench.c到目标OpenSSL test。 |
 
 ### 编译并运行
 
@@ -238,13 +238,13 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
 
 | 参数 | 说明 | 默认值 |
 | --- | --- | --- |
-| RSA_BENCH_BITS | RSA key size，支持`2048`和`4096` | `2048` |
-| RSA_BENCH_ITERS | benchmark迭代次数 | `1000` |
-| RSA_BENCH_CORE | 使用`taskset`绑定CPU core | 未绑定 |
-| RSA_BENCH_MODE | `all`、`native_default`、`native_no_blind`、`rsaz29_math`、`rsaz29_blind` | `all` |
-| RSA_BENCH_LINK | `auto`、`static`、`shared`，控制链接OpenSSL静态库或动态库 | `auto` |
-| OPENSSL_LIB | 显式指定`libcrypto.a`或`libcrypto.so`路径 | 未指定 |
-| CC | benchmark编译器 | `cc` |
+| RSA_BENCH_BITS | RSA key size，支持2048和4096 | 2048 |
+| RSA_BENCH_ITERS | benchmark迭代次数 | 1000 |
+| RSA_BENCH_CORE | 使用taskset绑定CPU core | 未绑定 |
+| RSA_BENCH_MODE | all、native_default、native_no_blind、rsaz29_math、rsaz29_blind | all |
+| RSA_BENCH_LINK | auto、static、shared，控制链接OpenSSL静态库或动态库 | auto |
+| OPENSSL_LIB | 显式指定libcrypto.a或libcrypto.so路径 | 未指定 |
+| CC | benchmark编译器 | cc |
 
 ## 安装后检查
 
@@ -252,9 +252,9 @@ OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
 
 | 检查项 | 成功标准 |
 | --- | --- |
-| OpenSSL编译 | `make`成功结束，无新增编译错误。 |
-| AES-XTS正确性 | 输出包含AES-128/192/256 XTS加解密`PASS`。 |
-| AES-GCM正确性 | `run_gcm_unit_bench.sh --verify-only`成功结束。 |
+| OpenSSL编译 | make成功结束，无新增编译错误。 |
+| AES-XTS正确性 | 输出包含AES-128/192/256 XTS加解密PASS。 |
+| AES-GCM正确性 | run_gcm_unit_bench.sh --verify-only成功结束。 |
 | RSA正确性 | benchmark输出与native或原始message对比通过。 |
 | 性能测试 | 输出GB/s或ns/op数据，可与开源路径对比。 |
 
