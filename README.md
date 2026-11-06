@@ -4,7 +4,7 @@
 
 ## 最新消息
 
-- [2026.09.30]：发布KACC_Crypto V1.1.0，新增AES-XTS SVE2优化、AES-GCM SVE2优化和RSA multi-buffer优化。
+- [2026-09-30]：发布KACC_Crypto V1.1.0，新增AES-XTS SVE2优化、AES-GCM SVE2优化和RSA multi-buffer优化。
 
 ## 项目介绍
 
@@ -164,7 +164,7 @@ cd kacc_crypto
 
 | 环境 | 要求 |
 | --- | --- |
-| 服务器和处理器 | 鲲鹏950处理器 |
+| 处理器 | 鲲鹏950处理器 |
 | 架构 | AArch64 |
 | 操作系统 | AArch64 Linux |
 | 指令能力 | ARMv8 AES、PMULL、SVE2 |
@@ -174,18 +174,18 @@ cd kacc_crypto
 
 ### 安装基础软件
 
-- 以 yum系发行版为例。
+- 以yum系发行版为例。
 
-```shell
-sudo yum install -y git gcc make perl
-```
+   ```shell
+   sudo yum install -y git gcc make perl
+   ```
 
-- 以 apt系发行版为例。
+- 以apt系发行版为例。
 
-```shell
-sudo apt-get update
-sudo apt-get install -y git gcc make perl
-```
+   ```shell
+   sudo apt-get update
+   sudo apt-get install -y git gcc make perl
+   ```
 
 ### 准备OpenSSL
 
@@ -244,7 +244,7 @@ make -j$(nproc)
     taskset -c 10 test/rsa4096_private_rsaz29_x8_bench 200 all
     ```
 
-更详细的源码获取、OpenSSL构建、优化代码接入和基础验证操作，请参见[快速入门](./docs/zh/quick_start.md)。
+更详细的源码获取、OpenSSL构建、优化代码接入和基础验证操作，请参见《[快速入门](./docs/zh/quick_start.md)》。
 
 ## 使用说明
 
@@ -290,7 +290,6 @@ taskset -c 10 test/rsa4096_private_rsaz29_x8_bench 200 all
 | 《[安装指南](./docs/zh/installation_guide.md)》 | 描述环境要求、三算法接入步骤、编译步骤和测试步骤。 |
 | 《[用户指南](./docs/zh/user_guide.md)》 | 描述AES-XTS、AES-GCM和RSA优化的使用入口、参数和验证方法。 |
 | 《[版本说明书](./docs/zh/release_notes.md)》 | 描述版本配套、能力范围、注意事项和遗留问题。 |
-| 《[文档许可证](./docs/LICENSE)》 | 文档许可证。 |
 
 ## License
 

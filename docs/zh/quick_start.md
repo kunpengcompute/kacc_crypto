@@ -30,7 +30,7 @@ KACC_Crypto是基于开源OpenSSL实现的密码算法优化库，当前包含AE
 1. 获取KACC_Crypto源码。
 
     ```bash
-    git clone https://gitcode.com/weiaq/kacc_crypto.git -b dev
+    git clone https://gitcode.com/boostkit/kacc_crypto -b dev
     cd kacc_crypto
     ```
 
@@ -113,9 +113,11 @@ OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
 
 ## 学习文档
 
-- 如需了解完整环境要求、接入过程和测试命令，请参见《[安装指南](./installation_guide.md)》。
-- 如需了解安装后的调用方式，请参见《[用户指南](./user_guide.md)》。
-- 如需了解版本能力、约束和已知问题，请参见《[版本说明书](./release_notes.md)》。
+|学习文档名称|学习文档简介|
+|--|---|
+|《[安装指南](./installation_guide.md)》|提供完整环境要求、接入过程和测试命令。|
+|《[用户指南](./user_guide.md)》|提供安装后的调用方式。|
+|《[版本说明书](./release_notes.md)》|提供版本能力、约束和已知问题信息。|
 
 ## 修订记录
 
