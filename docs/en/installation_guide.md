@@ -1,6 +1,6 @@
 # Installation Guide
 
-<!-- md-trans-meta sourceCommit=72e958ee82d46254880d491bd836a042180800d8 translatedAt=2026-10-14T02:42:41.175Z pushedAt=2026-10-14T06:25:33.160Z -->
+<!-- md-trans-meta sourceCommit=f681104ec2cb652de05c639f43dd0395c9708d16 translatedAt=2026-11-19T02:43:16.691Z pushedAt=2026-11-19T06:18:46.230Z -->
 
 ## Environment Setup
 
@@ -17,14 +17,14 @@ Before installation, check that the environment meets the current support scope 
 | SVE vector length | AES-XTS hot path optimized for 256-bit vectors |
 | Accelerator device | No external accelerator cards required |
 
-**Table 2** Software requirements
+**Table 2** OS and software requirements
 
 | Item | Description |
 | --- | --- |
 | OS | AArch64 Linux |
 | OpenSSL | OpenSSL 3.0.16 |
 | Compiler | GCC or Clang that supports AArch64 SVE2-related `-march` options |
-| Build tool | Git, GCC, make, perl |
+| Build tool | Git, GCC, make, perl, Python 3 |
 
 > ![icon note](public_sys-resources/icon-note.gif) **NOTE**
 >
@@ -37,14 +37,14 @@ Before installation, check that the environment meets the current support scope 
 - yum-based distributions
 
   ```bash
-  sudo yum install -y git gcc make perl
+  sudo yum install -y git gcc make perl python3
   ```
 
 - apt-based distributions
 
   ```bash
   sudo apt-get update
-  sudo apt-get install -y git gcc make perl
+  sudo apt-get install -y git gcc make perl python3
   ```
 
 ## Installation Methods
@@ -60,10 +60,12 @@ KACC_Crypto currently provides a source code integration method: The repository 
 
 ## Preparing the OpenSSL Source Tree
 
+The following screenshots are rendered from actual command output collected in an openEuler 24.03 LTS SP3 environment with GCC 12.3.1. The test results have not been rewritten, and user names and user directories are replaced with `***`. The verification directories in the screenshots are examples only; you do not need to use the same directory names. The example compilation concurrency is 16 and can be adjusted based on machine resources.
+
 1. Obtain the OpenSSL source code.
 
     ```bash
-    git clone https://github.com/openssl/openssl.git -b openssl-3.0.16
+    git clone --depth 1 -b openssl-3.0.16 https://github.com/openssl/openssl.git openssl
     cd openssl
     ```
 
@@ -71,23 +73,49 @@ KACC_Crypto currently provides a source code integration method: The repository 
 
     ```bash
     ./Configure linux-aarch64
-    make -j$(nproc)
+    make -j16 > build-native.log 2>&1
+    echo "OpenSSL build exit status: $?"
+    tail -n 4 build-native.log
     ```
 
-3. Confirm that the build artifacts exist.
+    Confirm that the build exit status is `0`, and then check the generated artifacts and the running version.
 
     ```bash
     test -f include/openssl/configuration.h
     test -f libcrypto.a || test -f libcrypto.so || test -f .openssl/lib/libcrypto.so
+    echo $?
+    LD_LIBRARY_PATH="$PWD" ./apps/openssl version
     ```
+
+    The exit status should be `0`, and the version should be `OpenSSL 3.0.16`. The libraries and executables generated here are within the source tree; the subsequent `OPENSSL_DIR` points to this source tree, not the directory where the system `/usr/bin/openssl` resides.
+
+    ![OpenSSL build and artifact check output](figures/install-openssl-build.png)
 
 ## Obtaining KACC_Crypto Code
 
 ```bash
-git clone https://gitcode.com/weiaq/kacc_crypto.git -b dev
+git clone --depth 1 -b dev https://gitcode.com/boostkit/kacc_crypto.git kacc_crypto
 cd kacc_crypto
 export OPENSSL_DIR=/path/to/openssl
 ```
+
+`/path/to/openssl` is the path to an OpenSSL source tree that has been configured and compiled. Replace it with the actual path in subsequent commands.
+
+![OpenSSL and KACC_Crypto source acquisition output](figures/install-source-download.png)
+
+## Software Package Integrity Verification
+
+This project currently provides source code through a Git repository, obtained via `git clone`, and does not provide a standalone software package, digital signature file, or SHA-256 checksum file. After obtaining the source code, you can check the integrity of Git objects, the source code commit version, and the working tree status.
+
+```bash
+git fsck --full
+git log -1 --oneline
+git status --short
+```
+
+`git fsck --full` should exit successfully; running `git status --short` in a newly cloned working tree should produce no output.
+
+![KACC_Crypto source version and integrity check output](figures/install-source-check.png)
 
 ## Installing and Testing AES-XTS
 
@@ -100,10 +128,11 @@ The AES-XTS optimization adds an SVE2 implementation to the underlying stream la
 Use the `install_sve2_xts_dispatch.sh` script to integrate the optimized code.
 
 ```bash
+cd /path/to/kacc_crypto
 OPENSSL_DIR=/path/to/openssl ./scripts/install_sve2_xts_dispatch.sh
 ```
 
-The `install_sve2_xts_dispatch.sh` script performs the following actions:
+The `install_sve2_xts_dispatch.sh` script performs the following actions.
 
 | Step | Description |
 | --- | --- |
@@ -118,8 +147,15 @@ Run the following command:
 
 ```bash
 cd /path/to/openssl
-make -j$(nproc)
+perl configdata.pm -r
+make -j16 > build-xts.log 2>&1
+echo "AES-XTS build exit status: $?"
+tail -n 4 build-xts.log
 ```
+
+The integration script modifies `build.info`. Regenerate the build configuration first, and then compile. The build exit status should be `0`.
+
+![AES-XTS integration and build output](figures/install-xts-build.png)
 
 ### Testing Functionality and Performance
 
@@ -127,14 +163,20 @@ make -j$(nproc)
 
    ```bash
    cd /path/to/kacc_crypto
-   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
+   RUN_PERF=1 OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
+   echo "AES-XTS tests exit status: $?"
    ```
 
-2. To enable additional performance analysis items, set the environment variables.
+   Functional tests should all pass with a script exit status of `0`; the performance tests should output the `native_avg`, `sve2_avg`, and `uplift` tables for AES-128/192/256-XTS encryption and decryption, with throughput in GB/s.
+
+   ![AES-XTS functional test output](figures/install-xts-functional.png)
+
+   ![AES-XTS performance test output](figures/install-xts-performance.png)
+
+2. To run only functional tests and skip performance tests, set `RUN_PERF=0`.
 
    ```bash
-   RUN_KPERF=1 RUN_TWEAK_BENCH=1 \
-   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
+   RUN_PERF=0 OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_xts.sh
    ```
 
 ## Installing and Testing AES-GCM
@@ -148,6 +190,7 @@ The AES-GCM optimization adds an SVE2 path that combines AES-CTR and GHASH compu
 Use the `install_sve2_gcm_dispatch.sh` script to integrate the optimized code.
 
 ```bash
+cd /path/to/kacc_crypto
 OPENSSL_DIR=/path/to/openssl ./scripts/install_sve2_gcm_dispatch.sh
 ```
 
@@ -165,15 +208,27 @@ The `install_sve2_gcm_dispatch.sh` script performs the following actions.
 
 ```bash
 cd /path/to/openssl
-make -j$(nproc)
+perl configdata.pm -r
+make -j16 > build-gcm.log 2>&1
+echo "AES-GCM build exit status: $?"
+tail -n 4 build-gcm.log
 ```
+
+The build exit status should be `0`.
+
+![AES-GCM integration and build output](figures/install-gcm-build.png)
 
 ### Testing Functionality
 
 ```bash
 cd /path/to/openssl/crypto/modes/asm
 ./run_gcm_unit_bench.sh --verify-only
+echo "AES-GCM verify exit status: $?"
 ```
+
+The output should include `sve2 gcm product candidate verify: PASS`, and the exit status should be `0`.
+
+![AES-GCM functional test output](figures/install-gcm-functional.png)
 
 ### Testing Performance
 
@@ -182,7 +237,12 @@ cd /path/to/openssl/crypto/modes/asm
    ```bash
    cd /path/to/openssl/crypto/modes/asm
    ./run_all_gcm_tests.sh
+   echo "AES-GCM full suite exit status: $?"
    ```
+
+   The output should include `All AES-GCM tests passed`, and the exit status should be `0`. The performance tables list the 128/192/256-bit key encryption and decryption results for NEON and SVE2 respectively. The default sizes are 16, 64, 256, 1,024, 8,192, and 16,384 bytes, and the values are the best throughput across five test rounds, in GB/s. `mean` is the arithmetic mean of all sizes, not a weighted throughput.
+
+   ![AES-GCM performance matrix and test completion output](figures/install-gcm-performance.png)
 
 2. Specify the data sizes to test.
 
@@ -208,7 +268,12 @@ The RSA optimization uses SVE2 instructions and an 8-way multi-buffer approach t
 Use the `install_rsa_rsaz29_x8.sh` script to integrate the optimized code.
 
 ```bash
+cd /path/to/kacc_crypto
 OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
+test -f "$OPENSSL_DIR/crypto/bn/asm/rsaz29-sve2-x8.S"
+test -f "$OPENSSL_DIR/test/rsa2048_private_rsaz29_x8_bench.c"
+test -f "$OPENSSL_DIR/test/rsa4096_private_rsaz29_x8_bench.c"
+echo "RSA source checks exit status: $?"
 ```
 
 The `install_rsa_rsaz29_x8.sh` script performs the following actions.
@@ -218,47 +283,54 @@ The `install_rsa_rsaz29_x8.sh` script performs the following actions.
 | Copy assembly | Install `rsaz29-sve2-x8.S` to the target OpenSSL `crypto/bn/asm`. |
 | Copy tests | Install `rsa2048_private_rsaz29_x8_bench.c` and `rsa4096_private_rsaz29_x8_bench.c` to the target OpenSSL `test`. |
 
+The integration script produces no output by default; the preceding files should exist, and the check exit status should be `0`.
+
+![RSA integration output](figures/install-rsa-sources.png)
+
 ### Compiling and Running
 
 - Compile and run the RSA2048 benchmark.
 
   ```bash
   cd /path/to/kacc_crypto
+  RSA_BENCH_BITS=2048 RSA_BENCH_RUN=1 \
   RSA_BENCH_ITERS=1000 RSA_BENCH_MODE=all \
   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.sh
+  echo "RSA-2048 tests exit status: $?"
   ```
+
+  The output should include `correctness=PASS` and provide the time cost and speedup of the native and SVE2 paths. The exit status should be `0`.
+
+  ![RSA2048 build, correctness, and performance test output](figures/install-rsa2048.png)
 
 - Compile and run the RSA4096 benchmark.
 
   ```bash
   cd /path/to/kacc_crypto
-  RSA_BENCH_BITS=4096 RSA_BENCH_ITERS=100 RSA_BENCH_MODE=all \
+  RSA_BENCH_BITS=4096 RSA_BENCH_RUN=1 \
+  RSA_BENCH_ITERS=100 RSA_BENCH_MODE=all \
   OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.sh
+  echo "RSA-4096 tests exit status: $?"
   ```
+
+  The output should include `correctness=PASS` and performance data, and the exit status should be `0`. Currently, the `*_ns` values in the RSA timing output are the time cost per 8-way batch, not the time cost of a single RSA request.
+
+  ![RSA4096 build, correctness, and performance test output](figures/install-rsa4096.png)
+
+`RSA_BENCH_RUN=1` indicates compile-and-run; if it is not set, only the benchmark is generated and no test is run.
 
 ### Common Parameters
 
 | Parameter | Description | Default Value |
 | --- | --- | --- |
-| RSA_BENCH_BITS | RSA key size, which is `2048` or `4096`. | `2048` |
-| RSA_BENCH_ITERS | Number of benchmark iterations. | `1000` |
-| RSA_BENCH_CORE | Binds CPU core using `taskset`. | Not bound |
-| RSA_BENCH_MODE | Options: `all`, `native_default`, `native_no_blind`, `rsaz29_math`, and `rsaz29_blind`. | `all` |
-| RSA_BENCH_LINK | Options: `auto`, `static`, and `shared`, controlling whether to link OpenSSL statically or dynamically. | `auto` |
+| RSA_BENCH_BITS | RSA key size. Options: `all`, `2048`, and `4096`. | all |
+| RSA_BENCH_ITERS | Number of benchmark iterations. | 1000 |
+| RSA_BENCH_RUN | `0`: compile only; `1`: compile and then run. | 0 |
+| RSA_BENCH_CORE | Uses `taskset` to bind CPU cores. | Not bound |
+| RSA_BENCH_MODE | Options: `all`, `native_default`, `native_no_blind`, `rsaz29_math`, and `rsaz29_blind` | all |
+| RSA_BENCH_LINK | Options: `auto`, `static`, and `shared`; controls whether to link the OpenSSL static or shared library. | auto |
 | OPENSSL_LIB | Explicitly specifies the path to `libcrypto.a` or `libcrypto.so`. | Not specified |
-| CC | Compiler used to compile the benchmark. | `cc` |
-
-## Verifying the Installation
-
-After completing any algorithm test, it is recommended to confirm the following results.
-
-| Check Item | Success Criteria |
-| --- | --- |
-| OpenSSL compilation | `make` completes successfully with no new compilation errors. |
-| AES-XTS correctness | The output includes `PASS` for AES-128/192/256 XTS encryption and decryption. |
-| AES-GCM correctness | `run_gcm_unit_bench.sh --verify-only` completes successfully. |
-| RSA correctness | The benchmark output passes comparison with the native or original message. |
-| Performance testing | The output includes performance data in GB/s or ns/op, which can be compared with the open-source implementation. |
+| CC | Benchmark compiler. | cc |
 
 ## Uninstalling KACC_Crypto Integration
 
