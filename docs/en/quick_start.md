@@ -16,7 +16,7 @@ This document provides a quick start process for integrating OpenSSL using sourc
 - Basic compilation tools have been installed.
 
     ```bash
-    sudo yum install -y git gcc make perl
+    sudo yum install -y git gcc make perl, Python 3
     ```
 
 - The initial OpenSSL configuration and compilation are complete. The test script (`libcrypto.a` or `libcrypto.so`) and the generated OpenSSL header files are ready.
@@ -119,7 +119,7 @@ The test covers the encryption and decryption paths of AES-128-XTS, AES-192-XTS,
 |--|---|
 |[Installation Guide](./installation_guide.md)|Provides complete environment requirements, integration process, and test commands.|
 |[User Guide](./user_guide.md)|Provides the calling methods after installation.|
-|[Release Notes](./release_notes.md)|Provides version capabilities, constraints, and known issues.|
+|[Release Notes](./release_notes.md)|Provides version capabilities, constraints.|
 
 ## Change History
 

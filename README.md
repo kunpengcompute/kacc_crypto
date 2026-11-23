@@ -106,7 +106,7 @@
 从本文使用的仓库地址获取`dev`分支。
 
 ```shell
-git clone --branch dev https://gitcode.com/weiaq/kacc_crypto.git
+git clone --branch dev https://gitcode.com/boostkit/kacc_crypto.git
 cd kacc_crypto
 ```
 
@@ -203,7 +203,7 @@ make -j$(nproc)
 1. 获取`KACC_Crypto`源码。
 
     ```shell
-    git clone https://gitcode.com/weiaq/kacc_crypto.git -b dev
+    git clone https://gitcode.com/boostkit/kacc_crypto.git -b dev
     cd kacc_crypto
     export OPENSSL_DIR=/path/to/openssl
     ```

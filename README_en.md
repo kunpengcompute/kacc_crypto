@@ -105,7 +105,7 @@ The project directory hierarchy is described as follows:
 | Software name | KACC_Crypto |
 | Software version | V1.1.0 |
 
-For detailed version capabilities, precautions, and known issues, see [Release Notes](./docs/en/release_notes.md).
+For detailed version capabilities, precautions, see [Release Notes](./docs/en/release_notes.md).
 
 ## Software Package Integrity Verification
 
@@ -116,7 +116,7 @@ This project currently provides source code through a Git repository, obtained v
 Obtain the `dev` branch from the repository address used in this document.
 
 ```shell
-git clone --branch dev https://gitcode.com/weiaq/kacc_crypto.git
+git clone --branch dev https://gitcode.com/boostkit/kacc_crypto.git
 cd kacc_crypto
 ```
 
@@ -179,7 +179,7 @@ Before deployment, verify the environment based on [**Table 4** Environment requ
 | OS | AArch64 Linux |
 | Instruction capabilities | Armv8 AES, PMULL, and SVE2 |
 | Compiler | GCC or Clang that supports AArch64 SVE2-related `-march` options |
-| Build tool | git, gcc or clang, make, perl |
+| Build tool | Git, GCC, make, perl, Python 3 |
 | OpenSSL version | Recommended: OpenSSL 3.0 series or a source tree matching the integration script anchors |
 
 ### Installing Basic Software
@@ -187,14 +187,14 @@ Before deployment, verify the environment based on [**Table 4** Environment requ
 - Take a yum-based distribution as an example.
 
    ```shell
-   sudo yum install -y git gcc make perl
+   sudo yum install -y git gcc make perl, Python 3
    ```
 
 - Take an apt-based distribution as an example.
 
    ```shell
    sudo apt-get update
-   sudo apt-get install -y git gcc make perl
+   sudo apt-get install -y git gcc make perl, Python 3
    ```
 
 ### Preparing OpenSSL
@@ -213,7 +213,7 @@ For environment setup details, source code integration, and post-installation ve
 1. Obtain the `KACC_Crypto` source code.
 
     ```shell
-    git clone https://gitcode.com/weiaq/kacc_crypto.git -b dev
+    git clone https://gitcode.com/boostkit/kacc_crypto.git -b dev
     cd kacc_crypto
     export OPENSSL_DIR=/path/to/openssl
     ```
@@ -299,7 +299,7 @@ An output containing `correctness=PASS` indicates that the functional verificati
 | [Quick Start](./docs/en/quick_start.md) | Describes how to quickly complete source code acquisition, OpenSSL build, optimized code integration, and basic verification. |
 | [Installation Guide](./docs/en/installation_guide.md) | Describes environment requirements, integration steps for the three algorithms, compilation steps, and test steps. |
 | [User Guide](./docs/en/user_guide.md) | Describes the entry points, parameters, and verification methods for AES-XTS, AES-GCM, and RSA optimizations. |
-| [Release Notes](./docs/en/release_notes.md) | Describes version compatibility, capability scope, precautions, and known issues. |
+| [Release Notes](./docs/en/release_notes.md) | Describes version compatibility, capability scope, precautions. |
 
 ## License
 

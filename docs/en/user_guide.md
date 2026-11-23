@@ -99,6 +99,7 @@ The RSA optimization is currently verified through an independent benchmark, rat
 | RSA_BENCH_LINK | Options: `auto`, `static`, and `shared`; controls whether to link the OpenSSL static or shared library. | auto |
 | OPENSSL_LIB | Explicitly specifies the path to `libcrypto.a` or `libcrypto.so`. | Not specified |
 | CC | Benchmark compiler. | cc |
+| RSA_BENCH_RUN | `0`: compile only; `1`: compile and then run. | 0 |
 
 ### Example
 
@@ -106,7 +107,7 @@ The RSA optimization is currently verified through an independent benchmark, rat
 
    ```shell
    cd /path/to/kacc_crypto
-   RSA_BENCH_ITERS=1000 RSA_BENCH_MODE=all \
+   RSA_BENCH_ITERS=1000 RSA_BENCH_MODE=all RSA_BENCH_RUN=1 \
    OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.sh
    ```
 

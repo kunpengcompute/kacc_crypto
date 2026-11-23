@@ -44,7 +44,7 @@
 
 | Software Version | OS | Dependency Version |
 | --- | --- | --- |
-| V1.1.0 | AArch64 Linux | OpenSSL 3.0.16 source tree, GCC/Clang, make, perl |
+| V1.1.0 | AArch64 Linux | OpenSSL 3.0.16 source tree, GCC/Clang, make, perl, Python 3 |
 
 > ![icon note](public_sys-resources/icon-note.gif) **NOTE**
 >
