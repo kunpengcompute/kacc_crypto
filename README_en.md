@@ -1,8 +1,8 @@
 # KACC_Crypto Cryptographic Algorithm Optimization
 
-<!-- md-trans-meta sourceCommit=cf73184a642f81f4ecba1b9d708eaa57c3b314fd translatedAt=2026-10-14T02:43:16.691Z pushedAt=2026-10-14T06:18:46.230Z -->
+<!-- md-trans-meta sourceCommit=9158e46ec337adc0867e114a858dbbc1c05bcae3 translatedAt=2026-11-19T02:43:16.691Z pushedAt=2026-11-19T06:18:46.230Z -->
 
-English|[简体中文](./README.md)
+[简体中文](./README.md)|English
 
 ## What's New
 
@@ -105,7 +105,7 @@ The project directory hierarchy is described as follows:
 | Software name | KACC_Crypto |
 | Software version | V1.1.0 |
 
-For detailed version capabilities, precautions, and known issues, see [Release Notes](./docs/en/release_notes.md).
+For detailed version capabilities, precautions, see [Release Notes](./docs/en/release_notes.md).
 
 ## Software Package Integrity Verification
 
@@ -116,7 +116,7 @@ This project currently provides source code through a Git repository, obtained v
 Obtain the `dev` branch from the repository address used in this document.
 
 ```shell
-git clone --branch dev https://gitcode.com/weiaq/kacc_crypto.git
+git clone --branch dev https://gitcode.com/boostkit/kacc_crypto.git
 cd kacc_crypto
 ```
 
@@ -174,33 +174,33 @@ Before deployment, verify the environment based on [**Table 4** Environment requ
 
 | Environment | Requirement |
 | --- | --- |
-| Server and processor | Kunpeng 950 processor |
+| Processor | Kunpeng 950 processor |
 | Architecture | AArch64 |
 | OS | AArch64 Linux |
 | Instruction capabilities | Armv8 AES, PMULL, and SVE2 |
 | Compiler | GCC or Clang that supports AArch64 SVE2-related `-march` options |
-| Build tool | git, gcc or clang, make, perl |
+| Build tool | git, gcc or clang, make, perl, Python 3 |
 | OpenSSL version | Recommended: OpenSSL 3.0 series or a source tree matching the integration script anchors |
 
 ### Installing Basic Software
 
 - Take a yum-based distribution as an example.
 
-```shell
-sudo yum install -y git gcc make perl
-```
+   ```shell
+   sudo yum install -y git gcc make perl, Python 3
+   ```
 
 - Take an apt-based distribution as an example.
 
-```shell
-sudo apt-get update
-sudo apt-get install -y git gcc make perl
-```
+   ```shell
+   sudo apt-get update
+   sudo apt-get install -y git gcc make perl, Python 3
+   ```
 
 ### Preparing OpenSSL
 
 ```shell
-git clone https://github.com/openssl/openssl.git -b openssl-3.0
+git clone https://github.com/openssl/openssl.git -b openssl-3.0.16
 cd openssl
 ./Configure linux-aarch64
 make -j$(nproc)
@@ -213,7 +213,7 @@ For environment setup details, source code integration, and post-installation ve
 1. Obtain the `KACC_Crypto` source code.
 
     ```shell
-    git clone https://gitcode.com/weiaq/kacc_crypto.git -b dev
+    git clone https://gitcode.com/boostkit/kacc_crypto.git -b dev
     cd kacc_crypto
     export OPENSSL_DIR=/path/to/openssl
     ```
@@ -299,8 +299,7 @@ An output containing `correctness=PASS` indicates that the functional verificati
 | [Quick Start](./docs/en/quick_start.md) | Describes how to quickly complete source code acquisition, OpenSSL build, optimized code integration, and basic verification. |
 | [Installation Guide](./docs/en/installation_guide.md) | Describes environment requirements, integration steps for the three algorithms, compilation steps, and test steps. |
 | [User Guide](./docs/en/user_guide.md) | Describes the entry points, parameters, and verification methods for AES-XTS, AES-GCM, and RSA optimizations. |
-| [Release Notes](./docs/en/release_notes.md) | Describes version compatibility, capability scope, precautions, and known issues. |
-| [Document License](./docs/LICENSE) | Document license. |
+| [Release Notes](./docs/en/release_notes.md) | Describes version compatibility, capability scope, precautions. |
 
 ## License
 

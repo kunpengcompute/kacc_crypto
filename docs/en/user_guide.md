@@ -1,8 +1,14 @@
 # User Guide
 
-<!-- md-trans-meta sourceCommit=72e958ee82d46254880d491bd836a042180800d8 translatedAt=2026-10-14T02:44:02.882Z pushedAt=2026-10-14T06:42:41.237Z -->
+<!-- md-trans-meta sourceCommit=9158e46ec337adc0867e114a858dbbc1c05bcae3 translatedAt=2026-11-19T02:43:16.691Z pushedAt=2026-11-20T06:18:46.230Z -->
 
 This document describes how to use KACC_Crypto after installation. Before you begin, complete the OpenSSL build, optimized code integration, and basic verification steps described in [Installation Guide](./installation_guide.md).
+
+## Important Notes
+
+- KACC_Crypto is currently intended for optimized code verification and upstream development. It does not provide a standalone runtime library.
+- The integration scripts modify the target OpenSSL source tree. It is recommended to run them in a clean OpenSSL working tree.
+- Before performance testing, it is recommended to fix the CPU frequency, bind CPU cores, and confirm that the target machine supports SVE2.
 
 ## Using AES-XTS Optimization
 
@@ -86,13 +92,13 @@ The RSA optimization is currently verified through an independent benchmark, rat
 
 | Parameter | Description | Default Value |
 | --- | --- | --- |
-| RSA_BENCH_BITS | RSA key size, which is `2048` or `4096`. | `2048` |
-| RSA_BENCH_ITERS | Number of benchmark iterations. | `1000` |
-| RSA_BENCH_CORE | Binds CPU cores. To enable it, run `taskset`. | Not bound |
-| RSA_BENCH_MODE | Options: `all`, `native_default`, `native_no_blind`, `rsaz29_math`, and `rsaz29_blind` | `all` |
-| RSA_BENCH_LINK | Options: `auto`, `static`, and `shared`, controlling whether to link OpenSSL statically or dynamically. | `auto` |
+| RSA_BENCH_BITS | RSA key size. Options: `2048` and `4096`. | 2048 |
+| RSA_BENCH_ITERS | Number of benchmark iterations. | 1000 |
+| RSA_BENCH_CORE | Uses `taskset` to bind CPU cores. | Not bound |
+| RSA_BENCH_MODE | Options: `all`, `native_default`, `native_no_blind`, `rsaz29_math`, and `rsaz29_blind` | all |
+| RSA_BENCH_LINK | Options: `auto`, `static`, and `shared`; controls whether to link the OpenSSL static or shared library. | auto |
 | OPENSSL_LIB | Explicitly specifies the path to `libcrypto.a` or `libcrypto.so`. | Not specified |
-| CC | Compiler used to compile the benchmark. | `cc` |
+| CC | Benchmark compiler. | cc |
 
 ### Example
 
@@ -100,7 +106,7 @@ The RSA optimization is currently verified through an independent benchmark, rat
 
    ```shell
    cd /path/to/kacc_crypto
-   RSA_BENCH_ITERS=1000 RSA_BENCH_MODE=all \
+   RSA_BENCH_ITERS=1000 RSA_BENCH_MODE=all RSA_BENCH_RUN=1 \
    OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.sh
    ```
 
@@ -122,15 +128,9 @@ The RSA optimization is currently verified through an independent benchmark, rat
 
 | Algorithm | Recommended Verification Method | Success Criteria |
 | --- | --- | --- |
-| AES-XTS | `apply_and_test_xts.sh` | The correctness test outputs `PASS`, and the performance output includes a comparison between native and SVE2. |
-| AES-GCM | `run_gcm_unit_bench.sh --verify-only` and `run_all_gcm_tests.sh` | The correctness test passes, and the performance matrix outputs NEON/SVE2 results in GB/s. |
-| RSA | `apply_and_test_rsa.sh` | The SVE2 results match the native or original message, and the output includes ns/op data. |
-
-## Important Notes
-
-- KACC_Crypto is currently intended for optimized code verification and upstream development. It does not provide a standalone runtime library.
-- The integration scripts modify the target OpenSSL source tree. It is recommended to run them in a clean OpenSSL working tree.
-- Before performance testing, it is recommended to fix the CPU frequency, bind CPU cores, and confirm that the target machine actually supports SVE2.
+| AES-XTS | apply_and_test_xts.sh | The correctness test outputs `PASS`, and the performance output includes a comparison between native and SVE2. |
+| AES-GCM | run_gcm_unit_bench.sh --verify-only and run_all_gcm_tests.sh | The correctness test passes, and the performance matrix outputs NEON/SVE2 results in GB/s. |
+| RSA | apply_and_test_rsa.sh | The SVE2 results match the native or original message, and the output includes ns/op data. |
 
 ## Change History
 
