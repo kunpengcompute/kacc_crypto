@@ -1,6 +1,6 @@
 # Quick Start
 
-<!-- md-trans-meta sourceCommit=cf44427b349a15f3e2de14446543026ddc946f03 translatedAt=2026-10-14T02:42:40.615Z pushedAt=2026-10-14T06:45:03.831Z -->
+<!-- md-trans-meta sourceCommit=9158e46ec337adc0867e114a858dbbc1c05bcae3 translatedAt=2026-11-19T02:43:16.691Z pushedAt=2026-11-20T06:18:46.230Z -->
 
 ## Introduction to KACC_Crypto
 
@@ -16,7 +16,7 @@ This document provides a quick start process for integrating OpenSSL using sourc
 - Basic compilation tools have been installed.
 
     ```bash
-    sudo yum install -y git gcc make perl
+    sudo yum install -y git gcc make perl, Python 3
     ```
 
 - The initial OpenSSL configuration and compilation are complete. The test script (`libcrypto.a` or `libcrypto.so`) and the generated OpenSSL header files are ready.
@@ -32,7 +32,7 @@ This document provides a quick start process for integrating OpenSSL using sourc
 1. Obtain the KACC_Crypto source code.
 
     ```bash
-    git clone https://gitcode.com/weiaq/kacc_crypto.git -b dev
+    git clone https://gitcode.com/boostkit/kacc_crypto -b dev
     cd kacc_crypto
     ```
 
@@ -115,9 +115,11 @@ The test covers the encryption and decryption paths of AES-128-XTS, AES-192-XTS,
 
 ## Related Documents
 
-- For details about the complete environment requirements, integration process, and test commands, see [Installation Guide](./installation_guide.md).
-- For details about invocation after installation, see [User Guide](./user_guide.md).
-- For details about version capabilities, constraints, and known issues, see [Release Notes](./release_notes.md).
+|Document Name|Description|
+|--|---|
+|[Installation Guide](./installation_guide.md)|Provides complete environment requirements, integration process, and test commands.|
+|[User Guide](./user_guide.md)|Provides the calling methods after installation.|
+|[Release Notes](./release_notes.md)|Provides version capabilities, constraints.|
 
 ## Change History
 

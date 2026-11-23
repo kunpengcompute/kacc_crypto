@@ -1,6 +1,6 @@
 # Release Notes
 
-<!-- md-trans-meta sourceCommit=671b18e2242e754a09e9e2ca6b22be27fc63808d translatedAt=2026-10-14T02:42:40.685Z pushedAt=2026-10-14T06:37:40.534Z -->
+<!-- md-trans-meta sourceCommit=f681104ec2cb652de05c639f43dd0395c9708d16 translatedAt=2026-11-19T02:43:16.691Z pushedAt=2026-11-20T06:18:46.230Z -->
 
 ## Version Requirements
 
@@ -44,7 +44,7 @@
 
 | Software Version | OS | Dependency Version |
 | --- | --- | --- |
-| V1.1.0 | AArch64 Linux | OpenSSL 3.0.16 source tree, GCC/Clang, make, perl |
+| V1.1.0 | AArch64 Linux | OpenSSL 3.0.16 source tree, GCC/Clang, make, perl, Python 3 |
 
 > ![icon note](public_sys-resources/icon-note.gif) **NOTE**
 >
@@ -89,14 +89,6 @@ None
 
 None
 
-### Known Issues
-
-| Trouble Ticket No. | Symptom | Impact Scope | Workaround |
-| --- | --- | --- | --- |
-| NA-001 | The AES-XTS hot path is not a generic implementation of variable vector lengths. | Machines with non-256-bit SVE vector lengths | Use the open-source path in unverified environments or provide a dedicated implementation for the target vector length. |
-| NA-002 | RSA is currently verified through an independent benchmark. | Scenarios where applications call the OpenSSL RSA APIs | Enable transparent optimization after adding OpenSSL internal dispatch or batch interfaces. |
-| NA-003 | The integration scripts depend on source anchors in OpenSSL. | OpenSSL source trees that differ significantly from the verified version | Use a matching version or manually adapt the scripts based on the anchors reported in the error messages. |
-
 ## Related Documentation
 
 ### V1.1.0 Documentation
@@ -106,7 +98,7 @@ None
 | Quick Start | Describes how to quickly complete source code acquisition, OpenSSL build, optimized code integration, and basic verification. |
 | Installation Guide | Describes environment requirements, and the steps of integrating, compiling, and testing the AES-XTS, AES-GCM, and RSA optimization algorithms. |
 | User Guide | Describes the entry points, parameters, and verification methods for AES-XTS, AES-GCM, and RSA optimization. |
-| Release Notes | Describes the version mapping, capability scope, precautions, and known issues of KACC_Crypto. |
+| Release Notes | Describes the version mapping, capability scope, and precautions of KACC_Crypto. |
 
 ### Obtaining Documentation
 
