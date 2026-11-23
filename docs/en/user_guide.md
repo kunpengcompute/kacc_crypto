@@ -106,7 +106,7 @@ The RSA optimization is currently verified through an independent benchmark, rat
 
    ```shell
    cd /path/to/kacc_crypto
-   RSA_BENCH_ITERS=1000 RSA_BENCH_MODE=all \
+   RSA_BENCH_ITERS=1000 RSA_BENCH_MODE=all RSA_BENCH_RUN=1 \
    OPENSSL_DIR=/path/to/openssl ./scripts/apply_and_test_rsa.sh
    ```
 

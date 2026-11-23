@@ -269,10 +269,9 @@ Use the `install_rsa_rsaz29_x8.sh` script to integrate the optimized code.
 
 ```bash
 cd /path/to/kacc_crypto
+export OPENSSL_DIR=/path/to/openssl
 OPENSSL_DIR=/path/to/openssl ./scripts/install_rsa_rsaz29_x8.sh
-test -f "$OPENSSL_DIR/crypto/bn/asm/rsaz29-sve2-x8.S"
-test -f "$OPENSSL_DIR/test/rsa2048_private_rsaz29_x8_bench.c"
-test -f "$OPENSSL_DIR/test/rsa4096_private_rsaz29_x8_bench.c"
+test -f "$OPENSSL_DIR/crypto/bn/asm/rsaz29-sve2-x8.S"&&test -f "$OPENSSL_DIR/test/rsa2048_private_rsaz29_x8_bench.c"&&test -f "$OPENSSL_DIR/test/rsa4096_private_rsaz29_x8_bench.c"
 echo "RSA source checks exit status: $?"
 ```
 
